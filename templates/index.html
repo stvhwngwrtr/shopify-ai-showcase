@@ -369,6 +369,10 @@
 
         <!-- Products Grid -->
         {% if products %}
+        <script>
+            // Store products data globally for fallback image access
+            window.currentProducts = {{ products | tojson | safe }};
+        </script>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {% for product in products %}
             <div class="product-card bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md" 
@@ -2591,11 +2595,30 @@
                 
                 const prompts = Array.from(imagePromptsToUse).map(p => p.textContent);
                 
+                // Get product images for fallback (check if we have product data)
+                const productImages = [];
+                
+                // Try to find the original product data from selectedProducts or global products
+                if (window.currentProducts) {
+                    const matchingProduct = window.currentProducts.find(p => 
+                        p.title === productTitle || p.title.includes(productTitle.replace('📦 ', ''))
+                    );
+                    if (matchingProduct && matchingProduct.images) {
+                        productImages.push(...matchingProduct.images);
+                    }
+                }
+                
                 const productData = {
                     title: productTitle,
                     vendor: vendor,
                     price: price,
-                    prompts: prompts
+                    prompts: prompts,
+                    products: [{
+                        title: productTitle,
+                        vendor: vendor,
+                        price: price,
+                        images: productImages
+                    }]
                 };
                 
                 // Switch to Image Generation tab
@@ -2711,7 +2734,8 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        prompts: productData.prompts
+                        prompts: productData.prompts,
+                        products: productData.products || []  // Include products for Shopify fallback
                     })
                 });
 
@@ -2781,10 +2805,16 @@
                                 </div>
                         `;
                         
-                        if (promptResult.error) {
+                        if (promptResult.error && !promptResult.used_fallback) {
                             cardHTML += `
                                 <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
                                     ❌ Error: ${promptResult.error}
+                                </div>
+                            `;
+                        } else if (promptResult.used_fallback) {
+                            cardHTML += `
+                                <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+                                    ℹ️ AI image generation unavailable. Using Shopify product image as fallback.
                                 </div>
                             `;
                         } else if (promptResult.images && promptResult.images.length > 0) {
