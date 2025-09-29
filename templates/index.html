@@ -1,0 +1,3125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Writer AI - Shopify Product Showcase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --writer-primary: #0066ff;
+            --writer-primary-dark: #0052cc;
+            --writer-primary-light: #3385ff;
+            --writer-secondary: #6b7280;
+            --writer-accent: #f59e0b;
+            --writer-success: #10b981;
+            --writer-error: #ef4444;
+            --writer-warning: #f59e0b;
+            --writer-gray-50: #f9fafb;
+            --writer-gray-100: #f3f4f6;
+            --writer-gray-200: #e5e7eb;
+            --writer-gray-300: #d1d5db;
+            --writer-gray-400: #9ca3af;
+            --writer-gray-500: #6b7280;
+            --writer-gray-600: #4b5563;
+            --writer-gray-700: #374151;
+            --writer-gray-800: #1f2937;
+            --writer-gray-900: #111827;
+            --writer-white: #ffffff;
+            --writer-black: #000000;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .product-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--writer-gray-200);
+        }
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: var(--writer-blue-light);
+        }
+        
+        .loading-spinner {
+            border: 3px solid var(--writer-gray-200);
+            border-top: 3px solid var(--writer-blue);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .writer-gradient {
+            background: linear-gradient(135deg, var(--writer-primary) 0%, var(--writer-primary-light) 100%);
+        }
+        
+        .writer-text-gradient {
+            background: linear-gradient(135deg, var(--writer-primary) 0%, var(--writer-primary-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .btn-primary {
+            background: var(--writer-primary);
+            color: white;
+            transition: all 0.2s ease;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .btn-primary:hover {
+            background: var(--writer-primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(0, 102, 255, 0.3);
+        }
+        
+        .btn-primary:disabled {
+            background: var(--writer-gray-300);
+            color: var(--writer-gray-500);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-primary:disabled:hover {
+            background: var(--writer-gray-300);
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-secondary {
+            background: var(--writer-gray-100);
+            color: var(--writer-gray-700);
+            border: 1px solid var(--writer-gray-300);
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .btn-secondary:hover {
+            background: var(--writer-gray-200);
+            border-color: var(--writer-gray-400);
+        }
+        
+        .product-card.selected {
+            border-color: var(--writer-primary);
+            border-width: 2px;
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.3), 0 4px 12px rgba(0, 102, 255, 0.2);
+            transform: translateY(-3px);
+            background: linear-gradient(135deg, #f8faff 0%, #e6f2ff 100%);
+        }
+
+        /* Tab Styles */
+        .tab-button {
+            color: var(--writer-gray-600);
+            background-color: transparent;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .tab-button.active {
+            color: var(--writer-primary);
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+        
+        .product-card.selected::before {
+            content: "✓";
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%);
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0, 102, 255, 0.4);
+            border: 2px solid white;
+        }
+        
+        .product-card.selected::after {
+            content: "SELECTED";
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            z-index: 10;
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+        }
+        
+        .product-card {
+            position: relative;
+        }
+        
+        /* Editable content styles */
+        .editable-content {
+            transition: all 0.2s ease;
+        }
+        
+        .editable-content[contenteditable="true"] {
+            outline: 2px solid var(--writer-primary);
+            outline-offset: 2px;
+            background-color: #ffffff !important;
+            cursor: text;
+        }
+        
+        .editable-content[contenteditable="true"]:focus {
+            outline: 2px solid var(--writer-primary);
+            outline-offset: 2px;
+        }
+        
+        .editing-mode {
+            background-color: #f0f9ff !important;
+            border-color: var(--writer-primary) !important;
+        }
+    </style>
+</head>
+<body style="background-color: var(--writer-gray-50);" class="min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <div class="inline-flex items-center mb-6">
+                <div class="writer-gradient rounded-xl mr-4 flex items-center justify-center shadow-lg px-3 py-2">
+                    <img src="/logo.svg" alt="Writer Logo" class="h-6 brightness-0 invert">
+                </div>
+                <div class="text-left">
+                    <span class="text-2xl font-bold" style="color: var(--writer-gray-900);">Writer</span>
+                    <span class="text-sm font-medium ml-2 px-2 py-1 rounded-full" style="background-color: var(--writer-gray-100); color: var(--writer-gray-600);">AI</span>
+                </div>
+            </div>
+            <h1 class="text-4xl font-bold mb-4" style="color: var(--writer-gray-900);">Product Showcase</h1>
+            <p class="text-lg" style="color: var(--writer-gray-600);">Transform your Shopify products with AI-powered content generation using Writer and Adobe Firefly. Enhance product descriptions with targeted messaging, create engaging Instagram posts with Writer AI, and generate professional product images - all optimized for your specific audience and language preferences.</p>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="flex justify-center mb-8">
+            <div class="bg-white rounded-xl p-1 shadow-sm" style="border: 1px solid var(--writer-gray-200);">
+                <button 
+                    onclick="switchTab('products')" 
+                    id="products-tab" 
+                    class="px-6 py-3 rounded-lg font-medium transition-all duration-200 tab-button active">
+                    <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                    Products
+                </button>
+                <button 
+                    onclick="switchTab('targeting')" 
+                    id="targeting-tab" 
+                    class="px-6 py-3 rounded-lg font-medium transition-all duration-200 tab-button">
+                    <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Targeting
+                </button>
+                <button 
+                    onclick="switchTab('writer')" 
+                    id="writer-tab" 
+                    class="px-6 py-3 rounded-lg font-medium transition-all duration-200 tab-button">
+                    <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    Social Derivative
+                </button>
+                <button 
+                    onclick="switchTab('image')" 
+                    id="image-tab" 
+                    class="px-6 py-3 rounded-lg font-medium transition-all duration-200 tab-button">
+                    <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    Image Generation
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Loading State -->
+        <div id="loadingState" class="flex justify-center items-center py-12" style="display: none;">
+            <div class="loading-spinner"></div>
+            <span class="ml-3 text-lg" style="color: var(--writer-gray-600);">Loading products...</span>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="tab-content">
+            <!-- Products Tab -->
+            <div id="products-tab-content" class="tab-content active">
+                <!-- Error Message -->
+                {% if error_message %}
+                <div id="errorMessage" class="px-6 py-4 rounded-xl mb-8" style="background-color: #fef2f2; border: 1px solid #fecaca; color: var(--writer-red);">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                        </svg>
+                        <strong class="font-semibold">Error:</strong>
+                        <span class="ml-2">{{ error_message }}</span>
+                    </div>
+                </div>
+                {% endif %}
+
+
+        <!-- Selected Products Summary -->
+        <div id="selectedProducts" class="mb-8" style="display: none;">
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 shadow-lg" style="border: 2px solid var(--writer-primary);">
+                <div class="flex items-center mb-4">
+                    <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mr-3">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold" style="color: var(--writer-gray-800);">
+                        <span id="selectedCount">0</span>/3 Products Selected
+                    </h3>
+                </div>
+                <div id="selectedList" class="space-y-2">
+                    <!-- Selected products will be added here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Language and Demographic Configuration -->
+        <div id="languageDemographicConfig" class="mb-8" style="display: none;">
+            <div class="bg-white rounded-xl p-6 shadow-sm" style="border: 1px solid var(--writer-gray-200);">
+                <h3 class="text-lg font-semibold mb-4" style="color: var(--writer-gray-800);">
+                    🎯 Targeting Configuration
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-2" style="color: var(--writer-gray-700);">
+                            Target Language
+                        </label>
+                        <select 
+                            id="targetLanguage" 
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            style="border-color: var(--writer-gray-300);">
+                            <option value="english">English</option>
+                            <option value="spanish">Spanish</option>
+                            <option value="french">French</option>
+                            <option value="german">German</option>
+                            <option value="italian">Italian</option>
+                            <option value="portuguese">Portuguese</option>
+                            <option value="dutch">Dutch</option>
+                            <option value="japanese">Japanese</option>
+                            <option value="korean">Korean</option>
+                            <option value="chinese">Chinese (Simplified)</option>
+                            <option value="chinese-traditional">Chinese (Traditional)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2" style="color: var(--writer-gray-700);">
+                            Target Demographic
+                        </label>
+                        <select 
+                            id="targetDemographic" 
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            style="border-color: var(--writer-gray-300);">
+                            <option value="general">General Audience</option>
+                            <option value="gen-z">Gen Z (1997-2012)</option>
+                            <option value="millennial">Millennial (1981-1996)</option>
+                            <option value="gen-x">Gen X (1965-1980)</option>
+                            <option value="baby-boomer">Baby Boomer (1946-1964)</option>
+                            <option value="teens">Teens (13-19)</option>
+                            <option value="young-adults">Young Adults (20-35)</option>
+                            <option value="middle-aged">Middle Aged (36-55)</option>
+                            <option value="seniors">Seniors (55+)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <button onclick="targetSelectedProducts()" class="btn-primary px-6 py-3 rounded-lg text-sm font-medium w-full">
+                        <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Target the Product Description
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        {% if products %}
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {% for product in products %}
+            <div class="product-card bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md" 
+                 style="border: 1px solid var(--writer-gray-200);" 
+                 onclick="selectProduct({{ product.id }}, this)"
+                 data-product-id="{{ product.id }}">
+                <!-- Product Image -->
+                {% if product.images %}
+                <div class="h-32" style="background-color: var(--writer-gray-100);">
+                    <img src="{{ product.images[0] }}" 
+                         alt="{{ product.title }}" 
+                         class="w-full h-full object-cover">
+                </div>
+                {% endif %}
+
+                <!-- Product Content -->
+                <div class="p-4">
+                    <h3 class="text-sm font-semibold mb-2 line-clamp-2" style="color: var(--writer-gray-800);">{{ product.title }}</h3>
+                    
+                    <div class="text-xs mb-2" style="color: var(--writer-gray-600);">
+                        <div class="flex items-center mb-1">
+                            <span class="font-medium mr-1">Vendor:</span>
+                            <span class="truncate">{{ product.vendor }}</span>
+                        </div>
+                        {% if product.product_type %}
+                        <div class="flex items-center">
+                            <span class="font-medium mr-1">Type:</span>
+                            <span class="truncate">{{ product.product_type }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Price -->
+                    {% if product.variants %}
+                    <div class="text-sm font-bold mb-2" style="color: var(--writer-blue);">
+                        ${{ product.variants[0].price }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Stock Info -->
+                    {% if product.variants %}
+                    <div class="text-xs mb-2" style="color: var(--writer-gray-500);">
+                        Stock: {{ product.variants[0].inventory_quantity }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Product Status -->
+                    <div class="flex items-center justify-between">
+                        <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full
+                                   {% if product.status == 'active' %}text-green-800{% else %}text-gray-800{% endif %}"
+                              style="{% if product.status == 'active' %}background-color: #dcfce7;{% else %}background-color: var(--writer-gray-100);{% endif %}">
+                            {{ product.status|title }}
+                        </span>
+                        <div class="text-xs" style="color: var(--writer-gray-500);">
+                            Writer AI
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Empty State -->
+        {% if not products and not loading %}
+        <div class="text-center py-16">
+            <div class="w-20 h-20 mx-auto mb-6 writer-gradient rounded-2xl flex items-center justify-center">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-semibold mb-3" style="color: var(--writer-gray-800);">No Products Found</h3>
+            <p class="text-lg mb-8" style="color: var(--writer-gray-600);">Try refreshing to load products from your Shopify store.</p>
+            <button onclick="refreshProducts()" class="btn-primary font-semibold py-3 px-6 rounded-xl">
+                Load Products
+            </button>
+        </div>
+                {% endif %}
+
+            <!-- Refresh Products Button (only visible on Products tab) -->
+            <div class="flex justify-center mt-8 mb-8" id="refreshProductsSection">
+                <button 
+                    onclick="refreshProducts()" 
+                    class="btn-primary font-semibold py-3 px-6 rounded-xl shadow-lg flex items-center"
+                    id="refreshBtn">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <span id="refreshText">Refresh Products</span>
+                </button>
+            </div>
+            </div>
+
+            <!-- Product Targeting Tab -->
+            <div id="targeting-tab-content" class="tab-content">
+                <div class="max-w-7xl mx-auto flex gap-8">
+                    <!-- Sidebar -->
+                    <div class="w-80 flex-shrink-0">
+                        <div class="bg-white rounded-xl p-6 shadow-sm sticky top-4" style="border: 1px solid var(--writer-gray-200);">
+                            <h3 class="text-lg font-semibold mb-4" style="color: var(--writer-gray-800);">
+                                🎯 Product Targeting with Writer AI
+                            </h3>
+                            <div class="space-y-4 text-sm" style="color: var(--writer-gray-600);">
+                                <div>
+                                    <p class="text-xs mb-3 leading-relaxed">
+                                        Transform your basic product descriptions into compelling, conversion-focused copy that drives sales and engages customers.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium mb-2" style="color: var(--writer-gray-700);">Writer AI's Targeting Process:</h4>
+                                    <ul class="space-y-2 text-xs">
+                                        <li class="flex items-start">
+                                            <span class="w-2 h-2 bg-blue-500 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                            <div>
+                                                <strong>Deep Analysis:</strong> Writer AI examines your current product descriptions, identifying gaps and opportunities for improvement
+                                            </div>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="w-2 h-2 bg-blue-500 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                            <div>
+                                                <strong>Content Generation:</strong> Creates persuasive, detailed copy that highlights key features, benefits, and emotional triggers
+                                            </div>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="w-2 h-2 bg-blue-500 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                            <div>
+                                                <strong>Strategic Insights:</strong> Explains exactly why the new version performs better and how it addresses customer needs
+                                            </div>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="w-2 h-2 bg-blue-500 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                            <div>
+                                                <strong>Brand Consistency:</strong> Maintains your unique voice while optimizing for search engines and conversions
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium mb-2" style="color: var(--writer-gray-700);">Business Impact:</h4>
+                                    <ul class="space-y-1 text-xs">
+                                        <li>• <strong>Increased Conversions:</strong> Up to 40% higher purchase rates with optimized copy</li>
+                                        <li>• <strong>Better SEO Rankings:</strong> Keyword-rich descriptions that search engines love</li>
+                                        <li>• <strong>Customer Engagement:</strong> More compelling product pages that keep visitors interested</li>
+                                        <li>• <strong>Time Savings:</strong> Generate professional copy in minutes, not hours</li>
+                                        <li>• <strong>Competitive Edge:</strong> Stand out with premium product descriptions</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-blue-50 p-3 rounded-lg">
+                                    <h4 class="font-medium mb-1 text-xs" style="color: var(--writer-gray-700);">Writer AI Advantage:</h4>
+                                    <p class="text-xs leading-relaxed">
+                                        Unlike generic AI tools, Writer AI is specifically trained on e-commerce best practices, conversion psychology, and proven copywriting techniques that drive sales.
+                                    </p>
+                                </div>
+                                <div class="pt-3 border-t" style="border-color: var(--writer-gray-200);">
+                                    <div class="flex items-center text-xs" style="color: var(--writer-gray-500);">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        Enterprise-grade AI by Writer
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Main Content -->
+                    <div class="flex-1 min-w-0">
+                    <!-- Targeting Configuration -->
+                    <div class="bg-white rounded-xl p-6 shadow-sm mb-8" style="border: 1px solid var(--writer-gray-200);">
+                        <h3 class="text-xl font-semibold mb-4" style="color: var(--writer-gray-800);">
+                            🎯 Product Targeting
+                        </h3>
+                        <p class="text-sm mb-6" style="color: var(--writer-gray-600);">
+                            Target your product descriptions using AI to create more compelling and detailed product information that converts better for specific audiences.
+                        </p>
+                        
+                        <!-- API Configuration -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2" style="color: var(--writer-gray-700);">
+                                    Writer API Key
+                                </label>
+                                <input 
+                                    type="password" 
+                                    id="targetingApiKey" 
+                                    value="zHPCT8S8UJh0z7jBPiXHWttThDiX1jZo"
+                                    placeholder="Enter your Writer API key"
+                                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    style="border-color: var(--writer-gray-300);">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2" style="color: var(--writer-gray-700);">
+                                    Application ID
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="targetingAppId" 
+                                    value="f84bbc32-b350-46ea-8301-8b95dccaa1bc"
+                                    placeholder="Enter your Writer application ID"
+                                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    style="border-color: var(--writer-gray-300);">
+                            </div>
+                        </div>
+
+
+                        <!-- Selected Products for Targeting -->
+                        <div id="targetingSelectedProducts" class="mb-6" style="display: none;">
+                            <h4 class="text-lg font-semibold mb-3" style="color: var(--writer-gray-800);">
+                                Selected Products for Targeting
+                            </h4>
+                            <div id="targetingProductList" class="space-y-2 max-h-40 overflow-y-auto">
+                                <!-- Selected products will be listed here -->
+                            </div>
+                        </div>
+
+                        <!-- Targeting Actions -->
+                        <div class="flex flex-wrap gap-4">
+                            <button 
+                                onclick="targetProducts()" 
+                                class="btn-primary px-6 py-3 rounded-xl font-semibold flex items-center transition-all duration-200"
+                                id="targetBtn"
+                                disabled>
+                                <svg id="targetIcon" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                <div id="targetSpinner" class="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" style="display: none;"></div>
+                                <span id="targetText">Target Products</span>
+                            </button>
+                            <button 
+                                onclick="clearTargetingSelection()" 
+                                class="px-6 py-3 border rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50"
+                                style="border-color: var(--writer-gray-300); color: var(--writer-gray-700);">
+                                Clear Selection
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Targeting Results -->
+                    <div id="targetingResults" class="space-y-6" style="display: none;">
+                        <h3 class="text-xl font-semibold mb-6" style="color: var(--writer-gray-800);">
+                            🎯 Targeted Product Details
+                        </h3>
+                        
+                        <!-- Multiple Product Targeting Results Container -->
+                        <div id="targetingResponsesContainer" class="space-y-8">
+                            <!-- Individual product targeting results will be populated here -->
+                        </div>
+                        
+                        <!-- Global Targeting Actions -->
+                        <div class="bg-white rounded-xl p-6 shadow-sm" style="border: 1px solid var(--writer-gray-200);">
+                            <h4 class="text-lg font-semibold mb-4" style="color: var(--writer-gray-800);">
+                                📄 Export Targeted Products
+                            </h4>
+                            <div class="flex flex-wrap gap-3">
+                                <button onclick="copyAllTargets()" class="btn-secondary px-4 py-2 rounded-lg text-sm font-medium">
+                                    📋 Copy All Targets
+                                </button>
+                                <button onclick="downloadTargets()" class="btn-secondary px-4 py-2 rounded-lg text-sm font-medium">
+                                    💾 Download as Text
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    </div> <!-- End Main Content -->
+                </div> <!-- End Container -->
+            </div>
+
+            <!-- Writer AI Tab -->
+            <div id="writer-tab-content" class="tab-content">
+                <div class="max-w-7xl mx-auto flex gap-8">
+                    <!-- Sidebar -->
+                    <div class="w-80 flex-shrink-0">
+                        <div class="bg-white rounded-xl p-6 shadow-sm sticky top-4" style="border: 1px solid var(--writer-gray-200);">
+                            <h3 class="text-lg font-semibold mb-4" style="color: var(--writer-gray-800);">
+                                📸 Social Derivative Content with Writer AI
+                            </h3>
+                            <div class="space-y-4 text-sm" style="color: var(--writer-gray-600);">
+                                <div>
+                                    <p class="text-xs mb-3 leading-relaxed">
+                                        Transform your product catalog into viral-ready social media content that drives engagement, builds brand awareness, and converts followers into customers.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium mb-2" style="color: var(--writer-gray-700);">Writer AI's Social Content Engine:</h4>
+                                    <ul class="space-y-2 text-xs">
+                                        <li class="flex items-start">
+                                            <span class="w-2 h-2 bg-pink-500 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                            <div>
+                                                <strong>Product Summary:</strong> AI-generated highlights that capture your product's most compelling features and benefits
+                                            </div>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="w-2 h-2 bg-pink-500 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                            <div>
+                                                <strong>Instagram-Optimized Captions:</strong> Scroll-stopping copy with strategic hashtags, calls-to-action, and engagement hooks
+                                            </div>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="w-2 h-2 bg-pink-500 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                            <div>
+                                                <strong>Visual Concepts:</strong> Creative image and video prompts tailored to Instagram's visual-first platform
+                                            </div>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="w-2 h-2 bg-pink-500 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                            <div>
+                                                <strong>Trend Integration:</strong> Content that leverages current social media trends and platform best practices
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium mb-2" style="color: var(--writer-gray-700);">Marketing Impact:</h4>
+                                    <ul class="space-y-1 text-xs">
+                                        <li>• <strong>Higher Engagement:</strong> Content designed to maximize likes, comments, and shares</li>
+                                        <li>• <strong>Brand Consistency:</strong> Maintains your unique voice across all social platforms</li>
+                                        <li>• <strong>Time Efficiency:</strong> Generate weeks of content in minutes</li>
+                                        <li>• <strong>Performance Optimization:</strong> Copy tested against social media algorithms</li>
+                                        <li>• <strong>Conversion Focus:</strong> Every post designed to drive traffic and sales</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium mb-2" style="color: var(--writer-gray-700);">Strategic Applications:</h4>
+                                    <ul class="space-y-1 text-xs">
+                                        <li>• <strong>Product Launches:</strong> Create buzz and anticipation for new releases</li>
+                                        <li>• <strong>Seasonal Campaigns:</strong> Leverage holidays and events for maximum reach</li>
+                                        <li>• <strong>User-Generated Content:</strong> Inspire customers to create their own posts</li>
+                                        <li>• <strong>Influencer Partnerships:</strong> Provide ready-made content for collaborations</li>
+                                        <li>• <strong>Cross-Platform Strategy:</strong> Adapt content for Stories, Reels, and Feed posts</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-pink-50 p-3 rounded-lg">
+                                    <h4 class="font-medium mb-1 text-xs" style="color: var(--writer-gray-700);">Writer AI Social Media Expertise:</h4>
+                                    <p class="text-xs leading-relaxed">
+                                        Trained on millions of high-performing social media posts, Writer AI understands what makes content go viral and how to balance creativity with conversion goals.
+                                    </p>
+                                </div>
+                                <div class="pt-3 border-t" style="border-color: var(--writer-gray-200);">
+                                    <div class="flex items-center text-xs" style="color: var(--writer-gray-500);">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        Enterprise-grade AI by Writer
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Main Content -->
+                    <div class="flex-1 min-w-0">
+                    <!-- Writer AI Configuration -->
+                    <div class="bg-white rounded-xl p-6 shadow-sm mb-8" style="border: 1px solid var(--writer-gray-200);">
+                        <h3 class="text-xl font-semibold mb-4" style="color: var(--writer-gray-800);">
+                            📸 Instagram Post Creator
+                        </h3>
+                        <p class="text-sm mb-6" style="color: var(--writer-gray-600);">
+                            Generate compelling Instagram posts for your selected products to boost social media engagement and drive sales.
+                        </p>
+                        
+                        <!-- API Configuration -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2" style="color: var(--writer-gray-700);">
+                                    Writer API Key
+                                </label>
+                                <input 
+                                    type="password" 
+                                    id="writerApiKey" 
+                                    value="zHPCT8S8UJh0z7jBPiXHWttThDiX1jZo"
+                                    placeholder="Enter your Writer API key"
+                                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    style="border-color: var(--writer-gray-300);">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2" style="color: var(--writer-gray-700);">
+                                    Application ID
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="writerAppId" 
+                                    value="573e34a0-fa17-4295-9126-9990c979f83c"
+                                    placeholder="Enter your Writer application ID"
+                                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    style="border-color: var(--writer-gray-300);">
+                            </div>
+                        </div>
+
+
+                        <!-- Selected Products for Writer -->
+                        <div id="writerSelectedProducts" class="mb-6" style="display: none;">
+                            <h4 class="text-lg font-semibold mb-3" style="color: var(--writer-gray-800);">
+                                Selected Products for Instagram Post
+                            </h4>
+                            <div id="writerProductList" class="space-y-2 max-h-40 overflow-y-auto">
+                                <!-- Selected products will be listed here -->
+                            </div>
+                        </div>
+
+                        <!-- Writer AI Actions -->
+                        <div class="flex flex-wrap gap-4">
+                            <button 
+                                onclick="sendToWriter()" 
+                                id="sendToWriterBtn"
+                                class="btn-primary font-semibold py-3 px-6 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled>
+                                <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-10 0a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2M9 8h6m-6 4h6m-6 4h6"/>
+                                </svg>
+                                Generate Instagram Posts
+                            </button>
+                            <button 
+                                onclick="clearWriterSelection()" 
+                                class="px-6 py-3 border rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50"
+                                style="border-color: var(--writer-gray-300); color: var(--writer-gray-700);">
+                                Clear Selection
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Writer AI Results -->
+                    <div id="writerResults" class="space-y-6" style="display: none;">
+                        <h3 class="text-xl font-semibold mb-6" style="color: var(--writer-gray-800);">
+                            📸 Instagram Post Content
+                        </h3>
+                        
+                        <!-- Multiple Product Responses Container -->
+                        <div id="productResponsesContainer" class="space-y-8">
+                            <!-- Individual product responses will be populated here -->
+                        </div>
+                        
+                        <!-- Global Actions -->
+                        <div class="bg-white rounded-xl p-6 shadow-sm" style="border: 1px solid var(--writer-gray-200);">
+                            <h4 class="text-lg font-semibold mb-4" style="color: var(--writer-gray-800);">
+                                📄 Export Options
+                            </h4>
+                            <div class="flex flex-wrap gap-3">
+                                <button onclick="copyAllCaptions()" class="btn-secondary px-4 py-2 rounded-lg text-sm font-medium">
+                                    📋 Copy All Captions
+                                </button>
+                                <button onclick="copyAllContent()" class="btn-secondary px-4 py-2 rounded-lg text-sm font-medium">
+                                    📄 Copy All Content
+                                </button>
+                                <button onclick="downloadAsText()" class="btn-secondary px-4 py-2 rounded-lg text-sm font-medium">
+                                    💾 Download as Text
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    </div> <!-- End Main Content -->
+                </div> <!-- End Container -->
+            </div>
+
+            <!-- Image Generation Tab -->
+            <div id="image-tab-content" class="tab-content">
+                <div class="max-w-7xl mx-auto flex gap-8">
+                    <!-- Sidebar -->
+                    <div class="w-80 flex-shrink-0">
+                        <div class="bg-white rounded-xl p-6 shadow-sm sticky top-4" style="border: 1px solid var(--writer-gray-200);">
+                            <h3 class="text-lg font-semibold mb-4" style="color: var(--writer-gray-800);">
+                                🎨 AI Image Generation with Writer
+                            </h3>
+                            <div class="space-y-4 text-sm" style="color: var(--writer-gray-600);">
+                                <div>
+                                    <p class="text-xs mb-3 leading-relaxed">
+                                        Generate stunning, professional product images using AI that perfectly showcase your products and boost customer engagement across all marketing channels.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium mb-2" style="color: var(--writer-gray-700);">Writer AI's Image Generation Process:</h4>
+                                    <ul class="space-y-2 text-xs">
+                                        <li class="flex items-start">
+                                            <span class="w-2 h-2 bg-purple-500 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                            <div>
+                                                <strong>Product Analysis:</strong> AI analyzes your product details to understand key features and optimal presentation angles
+                                            </div>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="w-2 h-2 bg-purple-500 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                            <div>
+                                                <strong>Scene Composition:</strong> Creates compelling backgrounds and environments that complement your product
+                                            </div>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="w-2 h-2 bg-purple-500 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                            <div>
+                                                <strong>Style Adaptation:</strong> Generates images in various styles - lifestyle, studio, artistic, or minimalist
+                                            </div>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="w-2 h-2 bg-purple-500 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                            <div>
+                                                <strong>Brand Consistency:</strong> Maintains your brand aesthetic while creating fresh, engaging visuals
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium mb-2" style="color: var(--writer-gray-700);">Marketing Impact:</h4>
+                                    <ul class="space-y-1 text-xs">
+                                        <li>• <strong>Higher Conversions:</strong> Professional images increase purchase intent by up to 60%</li>
+                                        <li>• <strong>Social Media Ready:</strong> Generate platform-optimized images for Instagram, Facebook, and TikTok</li>
+                                        <li>• <strong>Cost Effective:</strong> Replace expensive product photography with AI-generated alternatives</li>
+                                        <li>• <strong>Rapid Iteration:</strong> Generate multiple variations in minutes, not days</li>
+                                        <li>• <strong>Seasonal Adaptability:</strong> Create holiday and seasonal versions instantly</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium mb-2" style="color: var(--writer-gray-700);">Creative Applications:</h4>
+                                    <ul class="space-y-1 text-xs">
+                                        <li>• <strong>Product Catalogs:</strong> Consistent, high-quality images for your entire inventory</li>
+                                        <li>• <strong>A/B Testing:</strong> Generate multiple versions to test which performs best</li>
+                                        <li>• <strong>Lifestyle Contexts:</strong> Show products in real-world usage scenarios</li>
+                                        <li>• <strong>Size Variations:</strong> Create images optimized for different platforms and formats</li>
+                                        <li>• <strong>Mood Boards:</strong> Develop visual concepts for marketing campaigns</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-purple-50 p-3 rounded-lg">
+                                    <h4 class="font-medium mb-1 text-xs" style="color: var(--writer-gray-700);">Writer AI Visual Excellence:</h4>
+                                    <p class="text-xs leading-relaxed">
+                                        Powered by state-of-the-art image generation models, Writer AI creates photorealistic images that rival professional photography while maintaining perfect brand alignment.
+                                    </p>
+                                </div>
+                                <div class="pt-3 border-t" style="border-color: var(--writer-gray-200);">
+                                    <div class="flex items-center text-xs" style="color: var(--writer-gray-500);">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        Enterprise-grade AI by Writer
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Main Content -->
+                    <div class="flex-1 min-w-0">
+                    <!-- Image Generation Configuration -->
+                    <div class="bg-white rounded-xl p-6 shadow-sm mb-8" style="border: 1px solid var(--writer-gray-200);">
+                        <h3 class="text-xl font-semibold mb-4" style="color: var(--writer-gray-800);">
+                            🎨 AI Image Generator
+                        </h3>
+                        <p class="text-sm mb-6" style="color: var(--writer-gray-600);">
+                            Generate professional product images using AI to create stunning visuals that enhance your marketing and boost customer engagement.
+                        </p>
+                        
+
+                        <!-- Selected Products for Image Generation -->
+                        <div id="imageSelectedProducts" class="mb-6" style="display: none;">
+                            <h4 class="text-lg font-semibold mb-3" style="color: var(--writer-gray-800);">
+                                Selected Products for Image Generation
+                            </h4>
+                            <div id="imageProductList" class="space-y-2 max-h-40 overflow-y-auto">
+                                <!-- Selected products will be listed here -->
+                            </div>
+                        </div>
+
+                        <!-- Image Generation Actions -->
+                        <div class="flex flex-wrap gap-3">
+                            <button 
+                                onclick="generateImages()" 
+                                class="btn-primary px-6 py-3 rounded-xl font-semibold flex items-center transition-all duration-200"
+                                id="generateBtn"
+                                disabled>
+                                <svg id="generateIcon" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                <div id="generateSpinner" class="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" style="display: none;"></div>
+                                <span id="generateText">Generate Images</span>
+                            </button>
+                            <button 
+                                onclick="clearImageSelection()" 
+                                class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-gray-50"
+                                style="color: var(--writer-gray-600); border: 1px solid var(--writer-gray-300);">
+                                Clear Selection
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Image Generation Results -->
+                    <div id="imageResults" class="space-y-6" style="display: none;">
+                        <h3 class="text-xl font-semibold mb-6" style="color: var(--writer-gray-800);">
+                            🎨 Generated Product Images
+                        </h3>
+                        
+                        <!-- Multiple Product Image Results Container -->
+                        <div id="imageResponsesContainer" class="space-y-8">
+                            <!-- Individual product image results will be populated here -->
+                        </div>
+                        
+                        <!-- Global Image Actions -->
+                        <div class="bg-white rounded-xl p-6 shadow-sm" style="border: 1px solid var(--writer-gray-200);">
+                            <h4 class="text-lg font-semibold mb-4" style="color: var(--writer-gray-800);">
+                                📄 Export Generated Images
+                            </h4>
+                            <div class="flex flex-wrap gap-3">
+                                <button onclick="downloadAllImages()" class="btn-secondary px-4 py-2 rounded-lg text-sm font-medium">
+                                    💾 Download All Images
+                                </button>
+                                <button onclick="copyImageUrls()" class="btn-secondary px-4 py-2 rounded-lg text-sm font-medium">
+                                    📋 Copy Image URLs
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Instagram Post Mock -->
+                    <div id="instagramMock" class="space-y-6" style="display: none;">
+                        <h3 class="text-xl font-semibold mb-6" style="color: var(--writer-gray-800);">
+                            📱 Instagram Post Preview
+                        </h3>
+                        
+                        <div class="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden" style="border: 1px solid var(--writer-gray-200);">
+                            <!-- Instagram Post Header -->
+                            <div class="flex items-center p-4" style="border-bottom: 1px solid var(--writer-gray-200);">
+                                <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <div class="text-sm font-semibold" style="color: var(--writer-gray-800);" id="instagramUsername">SuperPossible</div>
+                                    <div class="text-xs" style="color: var(--writer-gray-500);">Sponsored</div>
+                                </div>
+                                <div class="ml-auto">
+                                    <svg class="w-5 h-5" style="color: var(--writer-gray-400);" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            
+                            <!-- Instagram Post Image -->
+                            <div class="aspect-square bg-gray-100 flex items-center justify-center">
+                                <img id="instagramImage" src="" alt="Instagram post image" class="w-full h-full object-cover" style="display: none;">
+                                <div id="instagramImagePlaceholder" class="text-center" style="color: var(--writer-gray-400);">
+                                    <svg class="w-16 h-16 mx-auto mb-2" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                                    </svg>
+                                    <p class="text-sm">Select an image to preview</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Instagram Post Actions -->
+                            <div class="p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center space-x-4">
+                                        <svg class="w-6 h-6" style="color: var(--writer-gray-800);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                        </svg>
+                                        <svg class="w-6 h-6" style="color: var(--writer-gray-800);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                        </svg>
+                                        <svg class="w-6 h-6" style="color: var(--writer-gray-800);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                                        </svg>
+                                    </div>
+                                    <svg class="w-6 h-6" style="color: var(--writer-gray-800);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                                    </svg>
+                                </div>
+                                
+                                <div class="text-sm font-semibold mb-2" style="color: var(--writer-gray-800);">
+                                    <span id="instagramLikes">1,234</span> likes
+                                </div>
+                                
+                                <!-- Instagram Caption -->
+                                <div class="text-sm" style="color: var(--writer-gray-800);">
+                                    <span class="font-semibold" id="instagramCaptionUsername">SuperPossible</span>
+                                    <span id="instagramCaption" class="ml-1">Select an image to see the caption preview...</span>
+                                </div>
+                                
+                                <div class="text-xs mt-2" style="color: var(--writer-gray-500);">
+                                    <span id="instagramTimestamp">2 hours ago</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Instagram Post Actions -->
+                        <div class="text-center space-y-3">
+                            <div class="flex gap-3 justify-center">
+                                <button id="postToInstagramBtn" onclick="postToInstagram()" class="btn-primary px-6 py-2 rounded-lg text-sm font-medium" style="display: none;">
+                                    📤 Post to Instagram
+                                </button>
+                                <button onclick="closeInstagramMock()" class="btn-secondary px-6 py-2 rounded-lg text-sm font-medium">
+                                    ✕ Close Preview
+                                </button>
+                            </div>
+                            <div id="instagramAuthSection" class="text-center" style="display: none;">
+                                <p class="text-sm mb-3" style="color: var(--writer-gray-600);">
+                                    Connect your Instagram account to post directly
+                                </p>
+                                <button onclick="authorizeInstagram()" class="btn-primary px-6 py-2 rounded-lg text-sm font-medium">
+                                    🔗 Connect Instagram
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    </div> <!-- End Main Content -->
+                </div> <!-- End Container -->
+            </div>
+        </div>
+
+    <!-- Footer -->
+    <footer class="mt-20 py-12" style="background-color: var(--writer-gray-50); border-top: 1px solid var(--writer-gray-200);">
+        <div class="container mx-auto px-4 text-center">
+            <div class="flex items-center justify-center mb-4">
+                <div class="w-8 h-8 writer-gradient rounded-lg mr-3 flex items-center justify-center shadow-sm">
+                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <span class="text-lg font-semibold" style="color: var(--writer-gray-800);">Writer</span>
+            </div>
+            <p class="text-sm mb-4" style="color: var(--writer-gray-600);">
+                Built with Writer Framework
+            </p>
+            <div class="flex justify-center space-x-6 text-xs" style="color: var(--writer-gray-500);">
+                <a href="https://dev.writer.com" class="hover:underline" target="_blank">Documentation</a>
+                <a href="https://writer.com" class="hover:underline" target="_blank">Writer.com</a>
+                <a href="https://dev.writer.com/framework" class="hover:underline" target="_blank">Framework</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let selectedProducts = new Set();
+        let manualProductData = null; // Store product data when coming from enhancement results
+        
+        function refreshProducts() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            const refreshText = document.getElementById('refreshText');
+            const loadingState = document.getElementById('loadingState');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // Show loading state
+            refreshBtn.disabled = true;
+            refreshText.textContent = 'Refreshing...';
+            loadingState.style.display = 'flex';
+            
+            // Hide previous messages
+            if (errorMessage) errorMessage.style.display = 'none';
+            
+            // Fetch fresh data
+            fetch('/api/refresh', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload the page to show updated data
+                    window.location.reload();
+                } else {
+                    // Show error message
+                    if (errorMessage) {
+                        errorMessage.querySelector('span').textContent = data.message;
+                        errorMessage.style.display = 'block';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (errorMessage) {
+                    errorMessage.querySelector('span').textContent = 'Failed to refresh products';
+                    errorMessage.style.display = 'block';
+                }
+            })
+            .finally(() => {
+                // Reset button state
+                refreshBtn.disabled = false;
+                refreshText.textContent = 'Refresh Products';
+                loadingState.style.display = 'none';
+            });
+        }
+        
+        function selectProduct(productId, element) {
+            if (selectedProducts.has(productId)) {
+                // Deselect
+                selectedProducts.delete(productId);
+                element.classList.remove('selected');
+            } else {
+                // Check if we've reached the limit of 3 products
+                if (selectedProducts.size >= 3) {
+                    // Show feedback that limit is reached
+                    showSelectionLimitMessage();
+                    return;
+                }
+                // Select
+                selectedProducts.add(productId);
+                element.classList.add('selected');
+            }
+            
+            updateSelectedProducts();
+        }
+        
+        function showSelectionLimitMessage() {
+            // Create a temporary message to show the limit has been reached
+            const message = document.createElement('div');
+            message.className = 'fixed top-4 right-4 bg-amber-100 border border-amber-400 text-amber-800 px-4 py-3 rounded-lg shadow-lg z-50';
+            message.innerHTML = `
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="font-medium">Maximum 3 products can be selected</span>
+                </div>
+            `;
+            document.body.appendChild(message);
+            
+            // Remove the message after 3 seconds
+            setTimeout(() => {
+                if (message.parentNode) {
+                    message.parentNode.removeChild(message);
+                }
+            }, 3000);
+        }
+        
+        function updateSelectedProducts() {
+            const selectedProductsDiv = document.getElementById('selectedProducts');
+            const selectedCount = document.getElementById('selectedCount');
+            const selectedList = document.getElementById('selectedList');
+            const languageDemographicConfig = document.getElementById('languageDemographicConfig');
+            
+            // Update button states based on selection
+            const targetBtn = document.getElementById('targetBtn');
+            const generateBtn = document.getElementById('generateBtn');
+            
+            selectedCount.textContent = selectedProducts.size;
+            
+            // Update styling based on selection count
+            const selectedProductsContainer = selectedProductsDiv.querySelector('div');
+            const countElement = document.getElementById('selectedCount');
+            
+            if (selectedProducts.size >= 3) {
+                // At limit - change to amber/orange styling
+                selectedProductsContainer.className = 'bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 shadow-lg';
+                selectedProductsContainer.style.border = '2px solid #f59e0b';
+                countElement.style.color = '#d97706';
+            } else {
+                // Normal blue styling
+                selectedProductsContainer.className = 'bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 shadow-lg';
+                selectedProductsContainer.style.border = '2px solid var(--writer-primary)';
+                countElement.style.color = 'var(--writer-gray-800)';
+            }
+            
+            if (selectedProducts.size > 0) {
+                selectedProductsDiv.style.display = 'block';
+                languageDemographicConfig.style.display = 'block';
+                
+                // Enable buttons when products are selected
+                if (targetBtn) targetBtn.disabled = false;
+                if (generateBtn) generateBtn.disabled = false;
+                
+                // Update selected list
+                selectedList.innerHTML = '';
+                selectedProducts.forEach(productId => {
+                    const productElement = document.querySelector(`[data-product-id="${productId}"]`);
+                    if (productElement) {
+                        const title = productElement.querySelector('h3').textContent;
+                        const price = productElement.querySelector('.text-sm.font-bold')?.textContent || 'N/A';
+                        
+                        const selectedItem = document.createElement('div');
+                        selectedItem.className = 'flex items-center justify-between p-3 rounded-lg border-l-4 shadow-sm';
+                        selectedItem.style.backgroundColor = 'white';
+                        selectedItem.style.borderLeftColor = 'var(--writer-primary)';
+                        selectedItem.style.border = '1px solid rgba(0, 102, 255, 0.2)';
+                        selectedItem.innerHTML = `
+                            <div class="flex items-center">
+                                <div class="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                                <span class="text-sm font-semibold" style="color: var(--writer-gray-800);">${title}</span>
+                            </div>
+                            <span class="text-sm font-bold px-2 py-1 bg-blue-100 text-blue-700 rounded">${price}</span>
+                        `;
+                        selectedList.appendChild(selectedItem);
+                    }
+                });
+            } else {
+                selectedProductsDiv.style.display = 'none';
+                languageDemographicConfig.style.display = 'none';
+                
+                // Disable buttons when no products are selected
+                if (targetBtn) targetBtn.disabled = true;
+                if (generateBtn) generateBtn.disabled = true;
+            }
+        }
+        
+        function deselectProduct(productId) {
+            selectedProducts.delete(productId);
+            const productElement = document.querySelector(`[data-product-id="${productId}"]`);
+            if (productElement) {
+                productElement.classList.remove('selected');
+            }
+            updateSelectedProducts();
+        }
+        
+        function clearSelection() {
+            selectedProducts.clear();
+            document.querySelectorAll('.product-card.selected').forEach(card => {
+                card.classList.remove('selected');
+            });
+            updateSelectedProducts();
+        }
+        
+        function exportSelection() {
+            if (selectedProducts.size === 0) {
+                alert('No products selected');
+                return;
+            }
+            
+            const selectedData = [];
+            selectedProducts.forEach(productId => {
+                const productElement = document.querySelector(`[data-product-id="${productId}"]`);
+                if (productElement) {
+                    const title = productElement.querySelector('h3').textContent;
+                    const vendor = productElement.querySelector('.text-xs .truncate').textContent;
+                    const price = productElement.querySelector('.text-sm.font-bold')?.textContent || 'N/A';
+                    const stock = productElement.querySelector('.text-xs:last-of-type')?.textContent || 'N/A';
+                    
+                    selectedData.push({
+                        id: productId,
+                        title: title,
+                        vendor: vendor,
+                        price: price,
+                        stock: stock
+                    });
+                }
+            });
+            
+            // Create and download CSV
+            const csvContent = "data:text/csv;charset=utf-8," + 
+                "ID,Title,Vendor,Price,Stock\n" +
+                selectedData.map(item => `${item.id},"${item.title}","${item.vendor}","${item.price}","${item.stock}"`).join("\n");
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "selected_products.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function targetSelectedProducts() {
+            if (selectedProducts.size === 0) {
+                alert('Please select at least one product to target');
+                return;
+            }
+            
+            // Switch to the Targeting tab
+            switchTab('targeting');
+            
+            // Wait a moment for the tab to switch, then start targeting
+            setTimeout(() => {
+                // Update the targeting selected products display
+                updateTargetingSelectedProducts();
+                
+                // Automatically start the targeting process
+                targetProducts();
+            }, 100);
+        }
+
+        // Tab switching functionality
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + '-tab-content').classList.add('active');
+            
+            // Add active class to selected tab button
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Show/hide refresh button based on tab
+            const refreshProductsSection = document.getElementById('refreshProductsSection');
+            
+            if (tabName === 'writer') {
+                refreshProductsSection.style.display = 'none';
+                updateWriterSelectedProducts();
+            } else if (tabName === 'targeting') {
+                refreshProductsSection.style.display = 'none';
+                updateTargetingSelectedProducts();
+            } else if (tabName === 'image') {
+                refreshProductsSection.style.display = 'none';
+                updateImageSelectedProducts();
+            } else {
+                refreshProductsSection.style.display = 'flex';
+            }
+        }
+
+        // Update Writer AI tab with selected products
+        function updateWriterSelectedProducts() {
+            const writerSelectedDiv = document.getElementById('writerSelectedProducts');
+            const writerProductList = document.getElementById('writerProductList');
+            const sendToWriterBtn = document.getElementById('sendToWriterBtn');
+            
+            if (selectedProducts.size === 0) {
+                writerSelectedDiv.style.display = 'none';
+                sendToWriterBtn.disabled = true;
+                manualProductData = null; // Clear manual product data when no products selected
+                return;
+            }
+            
+            writerSelectedDiv.style.display = 'block';
+            sendToWriterBtn.disabled = false;
+            manualProductData = null; // Clear manual product data when using normal selection
+            
+            // Clear existing list
+            writerProductList.innerHTML = '';
+            
+            // Add selected products to Writer AI list
+            selectedProducts.forEach(productId => {
+                const productElement = document.querySelector(`[data-product-id="${productId}"]`);
+                if (productElement) {
+                    const title = productElement.querySelector('h3').textContent;
+                    const price = productElement.querySelector('.text-sm.font-bold')?.textContent || 'N/A';
+                    
+                    const productItem = document.createElement('div');
+                    productItem.className = 'flex items-center justify-between p-3 rounded-lg border';
+                    productItem.style.backgroundColor = 'var(--writer-gray-50)';
+                    productItem.style.borderColor = 'var(--writer-gray-200)';
+                    productItem.innerHTML = `
+                        <span class="text-sm font-medium" style="color: var(--writer-gray-700);">${title}</span>
+                        <span class="text-sm font-bold" style="color: var(--writer-blue);">${price}</span>
+                    `;
+                    writerProductList.appendChild(productItem);
+                }
+            });
+        }
+
+        // Toggle image idea selection (limit 2 per card)
+        function toggleImageIdea(element, cardIndex) {
+            const isSelected = element.classList.contains('selected');
+            const cardContainer = element.closest('.bg-white');
+            const selectedIdeas = cardContainer.querySelectorAll('.image-idea.selected');
+            
+            if (isSelected) {
+                // Deselect
+                element.classList.remove('selected');
+                element.querySelector('.checkmark').classList.add('hidden');
+                element.style.borderColor = 'var(--writer-gray-200)';
+                element.style.backgroundColor = 'var(--writer-gray-50)';
+            } else {
+                // Check if we've reached the limit of 2 selections
+                if (selectedIdeas.length >= 2) {
+                    // Show a subtle message
+                    const existingMessage = cardContainer.querySelector('.selection-limit-message');
+                    if (!existingMessage) {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = 'selection-limit-message text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2';
+                        messageDiv.innerHTML = '💡 You can select up to 2 image ideas per post';
+                        
+                        const imageIdeasContainer = cardContainer.querySelector('.space-y-2');
+                        imageIdeasContainer.parentNode.appendChild(messageDiv);
+                        
+                        // Remove the message after 3 seconds
+                        setTimeout(() => {
+                            if (messageDiv.parentNode) {
+                                messageDiv.parentNode.removeChild(messageDiv);
+                            }
+                        }, 3000);
+                    }
+                    return;
+                }
+                
+                // Select
+                element.classList.add('selected');
+                element.querySelector('.checkmark').classList.remove('hidden');
+                element.style.borderColor = 'var(--writer-primary)';
+                element.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
+            }
+            
+            // Update generate images button state
+            updateGenerateImagesButtonState(cardContainer, cardIndex);
+        }
+        
+        // Update the state of the generate images button based on selected image ideas
+        function updateGenerateImagesButtonState(cardContainer, cardIndex) {
+            const selectedIdeas = cardContainer.querySelectorAll('.image-idea.selected');
+            const allIdeas = cardContainer.querySelectorAll('.image-idea');
+            const generateBtn = cardContainer.querySelector(`button[id*="generateImagesBtn-${cardIndex}"]`) || 
+                              cardContainer.querySelector(`button[onclick*="generateImagesFromPost(${cardIndex})"]`);
+            
+            if (generateBtn) {
+                // Enable only if there are selected ideas
+                const hasSelectedIdeas = selectedIdeas.length > 0;
+                const hasAnyIdeas = allIdeas.length > 0;
+                
+                if (hasSelectedIdeas) {
+                    generateBtn.disabled = false;
+                    generateBtn.title = `Generate images for ${selectedIdeas.length} selected idea(s)`;
+                } else if (hasAnyIdeas) {
+                    generateBtn.disabled = true;
+                    generateBtn.title = 'Please select at least one image idea to generate images';
+                } else {
+                    generateBtn.disabled = true;
+                    generateBtn.title = 'No image ideas available';
+                }
+            }
+        }
+
+        // Send selected products to Writer AI
+        async function sendToWriter() {
+            const apiKey = document.getElementById('writerApiKey').value.trim();
+            const appId = document.getElementById('writerAppId').value.trim();
+            const socialLanguage = document.getElementById('targetLanguage').value;
+            const socialDemographic = document.getElementById('targetDemographic').value;
+            
+            if (!apiKey || !appId) {
+                alert('Please enter both Writer API Key and Application ID');
+                return;
+            }
+            
+            // Check if we have products selected either manually or through normal selection
+            if (selectedProducts.size === 0 && !manualProductData) {
+                alert('No products selected');
+                return;
+            }
+            
+            const sendBtn = document.getElementById('sendToWriterBtn');
+            const originalText = sendBtn.innerHTML;
+            
+            // Show loading state
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = `
+                <svg class="w-5 h-5 mr-2 inline animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                                Generating Instagram Posts...
+            `;
+            
+            try {
+                // Prepare product data for Writer AI
+                let productData = [];
+                
+                if (manualProductData) {
+                    // Use manually stored product data (from enhancement results)
+                    productData = manualProductData;
+                } else {
+                    // Use normally selected products
+                selectedProducts.forEach(productId => {
+                    const productElement = document.querySelector(`[data-product-id="${productId}"]`);
+                    if (productElement) {
+                        const title = productElement.querySelector('h3').textContent;
+                        const vendor = productElement.querySelector('.text-xs .truncate').textContent;
+                        const price = productElement.querySelector('.text-sm.font-bold')?.textContent || 'N/A';
+                        const stock = productElement.querySelector('.text-xs:last-of-type')?.textContent || 'N/A';
+                        
+                        productData.push({
+                            title: title,
+                            vendor: vendor,
+                            price: price,
+                            stock: stock
+                        });
+                    }
+                });
+                }
+                
+                // Call Writer AI API
+                const response = await fetch('/api/writer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        api_key: apiKey,
+                        application_id: appId,
+                        products: productData,
+                        target_language: socialLanguage,
+                        target_demographic: socialDemographic
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Display multiple formatted Writer AI responses
+                    displayMultipleResponses(result.responses);
+                    document.getElementById('writerResults').style.display = 'block';
+                } else {
+                    alert('Error: ' + result.error);
+                }
+                
+            } catch (error) {
+                console.error('Error calling Writer AI:', error);
+                alert('Error calling Writer AI: ' + error.message);
+            } finally {
+                // Reset button
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = originalText;
+            }
+        }
+
+        // Clear Writer AI selection
+        function clearWriterSelection() {
+            clearSelection();
+            manualProductData = null; // Clear manual product data
+            updateWriterSelectedProducts();
+            document.getElementById('writerResults').style.display = 'none';
+        }
+
+        // Update Targeting tab with selected products
+        function updateTargetingSelectedProducts() {
+            const targetingSelectedDiv = document.getElementById('targetingSelectedProducts');
+            const targetingProductList = document.getElementById('targetingProductList');
+            
+            if (selectedProducts.size === 0) {
+                targetingSelectedDiv.style.display = 'none';
+                return;
+            }
+            
+            targetingSelectedDiv.style.display = 'block';
+            targetingProductList.innerHTML = '';
+            
+            selectedProducts.forEach(productId => {
+                const productElement = document.querySelector(`[data-product-id="${productId}"]`);
+                if (productElement) {
+                    const title = productElement.querySelector('h3').textContent;
+                    const price = productElement.querySelector('.text-sm.font-bold')?.textContent || 'N/A';
+                    
+                    const productDiv = document.createElement('div');
+                    productDiv.className = 'flex items-center justify-between p-3 rounded-lg border';
+                    productDiv.style.backgroundColor = 'var(--writer-gray-50)';
+                    productDiv.style.borderColor = 'var(--writer-gray-200)';
+                    productDiv.innerHTML = `
+                        <span class="text-sm font-medium" style="color: var(--writer-gray-700);">${title}</span>
+                        <span class="text-sm font-bold" style="color: var(--writer-blue);">${price}</span>
+                    `;
+                    targetingProductList.appendChild(productDiv);
+                }
+            });
+        }
+
+        // Target products using Writer AI
+        async function targetProducts() {
+            if (selectedProducts.size === 0) {
+                alert('Please select at least one product to target.');
+                return;
+            }
+
+            const apiKey = document.getElementById('targetingApiKey').value.trim();
+            const applicationId = document.getElementById('targetingAppId').value.trim();
+            const targetLanguage = document.getElementById('targetLanguage').value;
+            const targetDemographic = document.getElementById('targetDemographic').value;
+
+            if (!apiKey || !applicationId) {
+                alert('Please provide both API key and application ID.');
+                return;
+            }
+
+            const targetBtn = document.getElementById('targetBtn');
+            const targetText = document.getElementById('targetText');
+            
+            // Collect selected product data
+            const selectedData = [];
+            selectedProducts.forEach(productId => {
+                const productElement = document.querySelector(`[data-product-id="${productId}"]`);
+                if (productElement) {
+                    const title = productElement.querySelector('h3').textContent;
+                    const vendor = productElement.querySelector('.text-xs .truncate').textContent;
+                    const price = productElement.querySelector('.text-sm.font-bold')?.textContent || 'N/A';
+                    const stock = productElement.querySelector('.text-xs:last-of-type')?.textContent || 'N/A';
+                    
+                    selectedData.push({
+                        id: productId,
+                        title: title,
+                        vendor: vendor,
+                        price: price,
+                        stock: stock
+                    });
+                }
+            });
+
+            try {
+                // Show loading state with spinner
+                targetBtn.disabled = true;
+                targetBtn.classList.add('opacity-75');
+                targetText.textContent = 'Targeting Products...';
+                document.getElementById('targetIcon').style.display = 'none';
+                document.getElementById('targetSpinner').style.display = 'block';
+                
+                const response = await fetch('/api/target', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        api_key: apiKey,
+                        application_id: applicationId,
+                        products: selectedData,
+                        target_language: targetLanguage,
+                        target_demographic: targetDemographic
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Display targeting results
+                    displayTargetingResults(result.enhancements);
+                    document.getElementById('targetingResults').style.display = 'block';
+                } else {
+                    alert('Error: ' + result.error);
+                }
+                
+            } catch (error) {
+                console.error('Error enhancing products:', error);
+                alert('Error enhancing products: ' + error.message);
+            } finally {
+                // Reset button state
+                targetBtn.disabled = false;
+                targetBtn.classList.remove('opacity-75');
+                targetText.textContent = 'Target Products';
+                document.getElementById('targetIcon').style.display = 'block';
+                document.getElementById('targetSpinner').style.display = 'none';
+            }
+        }
+
+        // Display targeting results
+        function displayTargetingResults(enhancements) {
+            const container = document.getElementById('targetingResponsesContainer');
+            container.innerHTML = '';
+            
+            enhancements.forEach((enhancement, index) => {
+                const enhancementCard = document.createElement('div');
+                enhancementCard.className = 'bg-white rounded-xl p-6 shadow-sm';
+                enhancementCard.style.border = '1px solid var(--writer-gray-200)';
+                
+                let cardHTML = `
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-lg font-semibold" style="color: var(--writer-gray-800);">
+                            ✨ ${enhancement.original_product.title}
+                        </h4>
+                        <div class="text-sm" style="color: var(--writer-gray-600);">
+                            ${enhancement.original_product.vendor} • ${enhancement.original_product.price}
+                        </div>
+                    </div>
+                `;
+                
+                if (enhancement.error) {
+                    cardHTML += `
+                        <div class="p-4 rounded-lg mb-4" style="background-color: #fef2f2; border: 1px solid #fecaca;">
+                            <p class="text-sm" style="color: #dc2626;">❌ ${enhancement.error}</p>
+                        </div>
+                    `;
+                } else {
+                    // Original Description Section
+                    if (enhancement.original_description) {
+                        cardHTML += `
+                            <div class="mb-4">
+                                <h5 class="text-md font-semibold mb-2" style="color: var(--writer-gray-800);">📄 Original Description</h5>
+                                <div class="p-3 rounded-lg" style="background-color: #fef3c7; border: 1px solid #f59e0b; color: var(--writer-gray-700); font-family: 'Inter', sans-serif; line-height: 1.6; font-size: 0.875rem;">
+                                    ${enhancement.original_description}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Enhanced Description Section
+                    if (enhancement.enhanced_description) {
+                        cardHTML += `
+                            <div class="mb-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h5 class="text-md font-semibold" style="color: var(--writer-gray-800);">✨ Enhanced Description</h5>
+                                    <button onclick="toggleEditMode('enhanced-description-${index}')" class="text-xs px-2 py-1 rounded text-blue-600 hover:bg-blue-50 transition-colors">
+                                        <span class="edit-text">✏️ Edit</span>
+                                        <span class="save-text" style="display: none;">💾 Save</span>
+                                    </button>
+                                </div>
+                                <div class="enhanced-description-container">
+                                    <div id="enhanced-description-${index}" class="p-4 rounded-lg enhanced-description editable-content" 
+                                         style="background-color: #dcfce7; border: 1px solid #16a34a; color: var(--writer-gray-700); font-family: 'Inter', sans-serif; line-height: 1.6; min-height: 80px;"
+                                         contenteditable="false"
+                                         data-original-content="${enhancement.enhanced_description.replace(/"/g, '&quot;')}"
+                                         onblur="saveContent('enhanced-description-${index}')"
+                                         onkeydown="handleKeyDown(event, 'enhanced-description-${index}')">
+                                    ${enhancement.enhanced_description}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    
+                    
+                    // Action Buttons
+                    cardHTML += `
+                        <div class="pt-3" style="border-top: 1px solid var(--writer-gray-200);">
+                            <button onclick="createSocialDerivative(${index})" class="btn-primary px-4 py-2 rounded-lg text-sm font-medium w-full">
+                                📱 Create Social Posts
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                enhancementCard.innerHTML = cardHTML;
+                container.appendChild(enhancementCard);
+            });
+        }
+
+        // Copy individual enhancement content
+        function copyEnhancementContent(enhancementIndex) {
+            const enhancementCards = document.querySelectorAll('#targetingResponsesContainer .bg-white');
+            if (enhancementCards[enhancementIndex]) {
+                const descriptionDiv = enhancementCards[enhancementIndex].querySelector('.enhanced-description');
+                if (descriptionDiv) {
+                    const descriptionText = descriptionDiv.textContent;
+                    navigator.clipboard.writeText(descriptionText).then(() => {
+                        alert('Enhanced description copied to clipboard!');
+                    }).catch(err => {
+                        console.error('Failed to copy text: ', err);
+                    });
+                } else {
+                    alert('No enhanced description found for this product.');
+                }
+            }
+        }
+
+
+        // Create social derivative posts from enhanced product
+        function createSocialDerivative(enhancementIndex) {
+            const enhancementCards = document.querySelectorAll('#targetingResponsesContainer .bg-white');
+            if (enhancementCards[enhancementIndex]) {
+                const productTitle = enhancementCards[enhancementIndex].querySelector('h4').textContent.replace('✨ ', '');
+                const productInfo = enhancementCards[enhancementIndex].querySelector('.text-sm').textContent;
+                
+                // Extract vendor and price from the product info
+                const infoParts = productInfo.split(' • ');
+                const vendor = infoParts[0] || 'Unknown Brand';
+                const price = infoParts[1] || 'N/A';
+                
+                const productData = {
+                        title: productTitle,
+                    vendor: vendor,
+                    price: price,
+                        stock: 'Active'
+                    };
+                
+                // Switch to the Social Derivative (Writer) tab
+                switchTab('writer');
+                
+                // Wait a moment for the tab to switch, then populate and start
+                setTimeout(() => {
+                    // Clear existing writer products and store manual product data
+                    selectedProducts.clear();
+                    manualProductData = [productData]; // Store the product data for sendToWriter function
+                    
+                    // Manually populate the writer selected products display
+                    const writerSelectedDiv = document.getElementById('writerSelectedProducts');
+                    const writerProductList = document.getElementById('writerProductList');
+                    const sendToWriterBtn = document.getElementById('sendToWriterBtn');
+                    
+                    writerSelectedDiv.style.display = 'block';
+                    sendToWriterBtn.disabled = false;
+                    writerProductList.innerHTML = '';
+                    
+                    const productItem = document.createElement('div');
+                    productItem.className = 'flex items-center justify-between p-3 rounded-lg border';
+                    productItem.style.backgroundColor = 'var(--writer-gray-50)';
+                    productItem.style.borderColor = 'var(--writer-gray-200)';
+                    productItem.innerHTML = `
+                        <span class="text-sm font-medium" style="color: var(--writer-gray-700);">${productData.title}</span>
+                        <span class="text-sm font-bold" style="color: var(--writer-blue);">${productData.price}</span>
+                    `;
+                    writerProductList.appendChild(productItem);
+                    
+                    // Show a message that we're creating social posts for this product
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700';
+                    messageDiv.innerHTML = `
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>Creating social media posts for <strong>${productTitle}</strong>...</span>
+                        </div>
+                    `;
+                    
+                    // Insert message at the top of the writer tab content
+                    const writerContent = document.querySelector('#writer-tab-content .flex-1');
+                    if (writerContent) {
+                        writerContent.insertBefore(messageDiv, writerContent.firstChild);
+                        
+                        // Remove the message after 3 seconds
+                        setTimeout(() => {
+                            if (messageDiv.parentNode) {
+                                messageDiv.parentNode.removeChild(messageDiv);
+                            }
+                        }, 3000);
+                    }
+                    
+                    // Automatically start the Instagram post generation
+                    setTimeout(() => {
+                        sendToWriter();
+                    }, 500);
+                }, 200);
+            }
+        }
+
+        // Copy all targets
+        function copyAllTargets() {
+            const targetingCards = document.querySelectorAll('#targetingResponsesContainer .bg-white');
+            let allTargets = '';
+            
+            targetingCards.forEach((card, index) => {
+                const title = card.querySelector('h4').textContent;
+                const description = card.querySelector('.enhanced-description');
+                
+                allTargets += `${title}\n${'='.repeat(title.length)}\n\n`;
+                
+                if (description && description.textContent) {
+                    allTargets += 'ENHANCED DESCRIPTION:\n' + description.textContent + '\n\n';
+                }
+                
+                allTargets += '\n' + '-'.repeat(50) + '\n\n';
+            });
+            
+            if (allTargets) {
+                navigator.clipboard.writeText(allTargets).then(() => {
+                    alert('All targets copied to clipboard!');
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                });
+            } else {
+                alert('No targets found to copy.');
+            }
+        }
+
+        // Download targets as text file
+        function downloadTargets() {
+            const targetingCards = document.querySelectorAll('#targetingResponsesContainer .bg-white');
+            let content = 'Targeted Product Descriptions\n' + '='.repeat(30) + '\n\n';
+            
+            targetingCards.forEach((card, index) => {
+                const title = card.querySelector('h4').textContent;
+                const description = card.querySelector('.enhanced-description');
+                
+                content += `${title}\n${'='.repeat(title.length)}\n\n`;
+                
+                if (description && description.textContent) {
+                    content += 'ENHANCED DESCRIPTION:\n' + description.textContent + '\n\n';
+                }
+                
+                content += '\n' + '-'.repeat(50) + '\n\n';
+            });
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'targeted-products.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Clear targeting selection
+        function clearTargetingSelection() {
+            clearSelection();
+            updateTargetingSelectedProducts();
+            document.getElementById('targetingResults').style.display = 'none';
+        }
+
+        // Display multiple formatted Writer AI responses
+        function displayMultipleResponses(responses) {
+            const container = document.getElementById('productResponsesContainer');
+            container.innerHTML = '';
+            
+            responses.forEach((response, index) => {
+                const productCard = document.createElement('div');
+                productCard.className = 'bg-white rounded-xl p-6 shadow-sm';
+                productCard.style.border = '1px solid var(--writer-gray-200)';
+                
+                let cardHTML = `
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-lg font-semibold" style="color: var(--writer-gray-800);">
+                            📦 ${response.product.title}
+                        </h4>
+                        <div class="text-sm" style="color: var(--writer-gray-600);">
+                            ${response.product.vendor} • ${response.product.price}
+                        </div>
+                    </div>
+                `;
+                
+                if (response.error) {
+                    cardHTML += `
+                        <div class="p-4 rounded-lg mb-4" style="background-color: #fef2f2; border: 1px solid #fecaca;">
+                            <p class="text-sm" style="color: #dc2626;">❌ ${response.error}</p>
+                        </div>
+                    `;
+                } else {
+                    // Summary Section
+                    if (response.summary && response.summary.length > 0) {
+                        cardHTML += `
+                            <div class="mb-4">
+                                <h5 class="text-md font-semibold mb-2" style="color: var(--writer-gray-800);">📋 Summary</h5>
+                                <ul class="list-disc pl-6 space-y-1" style="color: var(--writer-gray-700);">
+                        `;
+                        response.summary.forEach(item => {
+                            cardHTML += `<li>${item}</li>`;
+                        });
+                        cardHTML += `</ul></div>`;
+                    }
+                    
+                    // Caption Section
+                    if (response.caption) {
+                        cardHTML += `
+                            <div class="mb-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h5 class="text-md font-semibold" style="color: var(--writer-gray-800);">💬 Instagram Caption</h5>
+                                    <button onclick="toggleEditMode('caption-${index}')" class="text-xs px-2 py-1 rounded text-blue-600 hover:bg-blue-50 transition-colors">
+                                        <span class="edit-text">✏️ Edit</span>
+                                        <span class="save-text" style="display: none;">💾 Save</span>
+                                    </button>
+                                </div>
+                                <div class="caption-container">
+                                    <div id="caption-${index}" class="p-3 rounded-lg caption-text editable-content" 
+                                         style="background-color: var(--writer-gray-50); color: var(--writer-gray-700); font-family: 'Inter', sans-serif; line-height: 1.6; min-height: 60px;"
+                                         contenteditable="false"
+                                         data-original-content="${response.caption.replace(/"/g, '&quot;')}"
+                                         onblur="saveContent('caption-${index}')"
+                                         onkeydown="handleKeyDown(event, 'caption-${index}')">
+                                    ${response.caption}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Hashtags Section
+                    if (response.hashtags && response.hashtags.length > 0) {
+                        cardHTML += `
+                            <div class="mb-4">
+                                <h5 class="text-md font-semibold mb-2" style="color: var(--writer-gray-800);">🏷️ Hashtags</h5>
+                                <div class="flex flex-wrap gap-2">
+                        `;
+                        response.hashtags.forEach(hashtag => {
+                            cardHTML += `
+                                <span class="inline-block px-3 py-1 text-sm font-medium rounded-full" 
+                                      style="background-color: #e0f2fe; color: #0277bd; border: 1px solid #b3e5fc;">
+                                    ${hashtag}
+                                </span>
+                            `;
+                        });
+                        cardHTML += `
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Image Prompts Section
+                    if (response.image_prompts && response.image_prompts.length > 0) {
+                        cardHTML += `
+                            <div class="mb-4">
+                                <h5 class="text-md font-semibold mb-2" style="color: var(--writer-gray-800);">
+                                    🎨 Image Ideas 
+                                    <span class="text-xs font-normal" style="color: var(--writer-gray-500);">(Select up to 2)</span>
+                                </h5>
+                                <div class="space-y-2">
+                        `;
+                        response.image_prompts.forEach((prompt, promptIndex) => {
+                            cardHTML += `
+                                <div class="image-idea p-2 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm" 
+                                     style="background-color: var(--writer-gray-50); border: 1px solid var(--writer-gray-200);"
+                                     onclick="toggleImageIdea(this, ${index})"
+                                     data-card-index="${index}"
+                                     data-prompt-index="${promptIndex}">
+                                    <div class="flex items-start">
+                                        <span class="selection-indicator flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold mr-2" 
+                                              style="background-color: var(--writer-primary); color: white;">${promptIndex + 1}</span>
+                                        <p class="text-xs" style="color: var(--writer-gray-700);">${prompt}</p>
+                                        <div class="ml-auto flex-shrink-0">
+                                            <div class="checkmark hidden w-4 h-4 text-green-600">
+                                                <svg fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        cardHTML += `</div></div>`;
+                    }
+                    
+                    // Individual Copy Button and Generate Images Button
+                    const hasImagePrompts = response.image_prompts && response.image_prompts.length > 0;
+                    cardHTML += `
+                        <div class="pt-3 flex gap-3" style="border-top: 1px solid var(--writer-gray-200);">
+                            <button onclick="copyProductContent(${index})" class="btn-secondary px-3 py-1 rounded text-xs font-medium">
+                                📋 Copy This Caption
+                            </button>
+                            <button onclick="generateImagesFromPost(${index})" 
+                                    id="generateImagesBtn-${index}"
+                                    class="btn-primary px-3 py-1 rounded text-xs font-medium" 
+                                    disabled
+                                    title="${hasImagePrompts ? 'Please select at least one image idea to generate images' : 'No image ideas available'}">
+                                🎨 Generate Images
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                productCard.innerHTML = cardHTML;
+                container.appendChild(productCard);
+            });
+            
+            // Update all generate images button states after cards are created
+            container.querySelectorAll('.bg-white').forEach((card, index) => {
+                updateGenerateImagesButtonState(card, index);
+            });
+        }
+
+        // Copy individual product caption
+        function copyProductContent(productIndex) {
+            const productCards = document.querySelectorAll('#productResponsesContainer .bg-white');
+            if (productCards[productIndex]) {
+                const captionDiv = productCards[productIndex].querySelector('.caption-text');
+                if (captionDiv) {
+                    const captionText = captionDiv.textContent;
+                    navigator.clipboard.writeText(captionText).then(() => {
+                        alert('Caption copied to clipboard!');
+                    }).catch(err => {
+                        console.error('Failed to copy text: ', err);
+                    });
+                } else {
+                    alert('No caption found for this product.');
+                }
+            }
+        }
+
+        // Copy all captions
+        function copyAllCaptions() {
+            const captions = document.querySelectorAll('.caption-text');
+            let allCaptions = '';
+            
+            captions.forEach((caption, index) => {
+                if (caption.textContent) {
+                    allCaptions += `POST ${index + 1}:\n${caption.textContent}\n\n`;
+                }
+            });
+            
+            if (allCaptions) {
+                navigator.clipboard.writeText(allCaptions).then(() => {
+                    alert('All captions copied to clipboard!');
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                });
+            } else {
+                alert('No captions found to copy.');
+            }
+        }
+
+        // Copy all content
+        function copyAllContent() {
+            const productCards = document.querySelectorAll('#productResponsesContainer .bg-white');
+            let allContent = '';
+            
+            productCards.forEach((card, index) => {
+                const title = card.querySelector('h4').textContent;
+                const summaryItems = card.querySelectorAll('ul li');
+                const caption = card.querySelector('.caption-text');
+                const imagePrompts = card.querySelectorAll('.space-y-2 p');
+                
+                allContent += `${title}\n${'='.repeat(title.length)}\n\n`;
+                
+                if (summaryItems.length > 0) {
+                    allContent += 'SUMMARY:\n';
+                    summaryItems.forEach(item => {
+                        allContent += '• ' + item.textContent + '\n';
+                    });
+                    allContent += '\n';
+                }
+                
+                if (caption && caption.textContent) {
+                    allContent += 'INSTAGRAM CAPTION:\n' + caption.textContent + '\n\n';
+                }
+                
+                // Only include selected image ideas (or all if none selected)
+                const selectedImagePrompts = card.querySelectorAll('.image-idea.selected p');
+                const allImagePrompts = card.querySelectorAll('.image-idea p');
+                const imagePromptsToUse = selectedImagePrompts.length > 0 ? selectedImagePrompts : allImagePrompts;
+                
+                if (imagePromptsToUse.length > 0) {
+                    allContent += 'IMAGE IDEAS:\n';
+                    imagePromptsToUse.forEach((prompt, promptIndex) => {
+                        allContent += `${promptIndex + 1}. ${prompt.textContent}\n`;
+                    });
+                    allContent += '\n';
+                }
+                
+                allContent += '\n' + '-'.repeat(50) + '\n\n';
+            });
+            
+            navigator.clipboard.writeText(allContent).then(() => {
+                alert('All content copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+
+        // Download content as text file
+        function downloadAsText() {
+            const productCards = document.querySelectorAll('#productResponsesContainer .bg-white');
+            let content = 'Instagram Post Content\n' + '='.repeat(25) + '\n\n';
+            
+            productCards.forEach((card, index) => {
+                const title = card.querySelector('h4').textContent;
+                const summaryItems = card.querySelectorAll('ul li');
+                const caption = card.querySelector('.caption-text');
+                const imagePrompts = card.querySelectorAll('.space-y-2 p');
+                
+                content += `${title}\n${'='.repeat(title.length)}\n\n`;
+                
+                if (summaryItems.length > 0) {
+                    content += 'SUMMARY:\n';
+                    summaryItems.forEach(item => {
+                        content += '• ' + item.textContent + '\n';
+                    });
+                    content += '\n';
+                }
+                
+                if (caption && caption.textContent) {
+                    content += 'INSTAGRAM CAPTION:\n' + caption.textContent + '\n\n';
+                }
+                
+                // Only include selected image ideas (or all if none selected)
+                const selectedImagePrompts = card.querySelectorAll('.image-idea.selected p');
+                const allImagePrompts = card.querySelectorAll('.image-idea p');
+                const imagePromptsToUse = selectedImagePrompts.length > 0 ? selectedImagePrompts : allImagePrompts;
+                
+                if (imagePromptsToUse.length > 0) {
+                    content += 'IMAGE IDEAS:\n';
+                    imagePromptsToUse.forEach((prompt, promptIndex) => {
+                        content += `${promptIndex + 1}. ${prompt.textContent}\n`;
+                    });
+                    content += '\n';
+                }
+                
+                content += '\n' + '-'.repeat(50) + '\n\n';
+            });
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'instagram-posts.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Update Image Generation tab with selected products
+        function updateImageSelectedProducts() {
+            const imageSelectedDiv = document.getElementById('imageSelectedProducts');
+            const imageProductList = document.getElementById('imageProductList');
+            
+            if (selectedProducts.size === 0) {
+                imageSelectedDiv.style.display = 'none';
+                return;
+            }
+            
+            imageSelectedDiv.style.display = 'block';
+            imageProductList.innerHTML = '';
+            
+            selectedProducts.forEach(productId => {
+                const productElement = document.querySelector(`[data-product-id="${productId}"]`);
+                if (productElement) {
+                    const title = productElement.querySelector('h3').textContent;
+                    const price = productElement.querySelector('.text-sm.font-bold')?.textContent || 'N/A';
+                    
+                    const productDiv = document.createElement('div');
+                    productDiv.className = 'flex items-center justify-between p-3 rounded-lg border';
+                    productDiv.style.backgroundColor = 'var(--writer-gray-50)';
+                    productDiv.style.borderColor = 'var(--writer-gray-200)';
+                    productDiv.innerHTML = `
+                        <span class="text-sm font-medium" style="color: var(--writer-gray-700);">${title}</span>
+                        <span class="text-sm font-bold" style="color: var(--writer-blue);">${price}</span>
+                    `;
+                    imageProductList.appendChild(productDiv);
+                }
+            });
+        }
+
+        // Generate images using Writer AI
+        async function generateImages() {
+            if (selectedProducts.size === 0) {
+                alert('Please select at least one product to generate images for.');
+                return;
+            }
+
+            const apiKey = document.getElementById('imageApiKey').value.trim();
+            const applicationId = document.getElementById('imageAppId').value.trim();
+
+            if (!apiKey || !applicationId) {
+                alert('Please provide both API key and application ID.');
+                return;
+            }
+
+            const generateBtn = document.getElementById('generateBtn');
+            const generateText = document.getElementById('generateText');
+            
+            // Collect selected product data
+            const selectedData = [];
+            selectedProducts.forEach(productId => {
+                const productElement = document.querySelector(`[data-product-id="${productId}"]`);
+                if (productElement) {
+                    const title = productElement.querySelector('h3').textContent;
+                    const vendor = productElement.querySelector('.text-xs .truncate').textContent;
+                    const price = productElement.querySelector('.text-sm.font-bold')?.textContent || 'N/A';
+                    
+                    selectedData.push({
+                        id: productId,
+                        title: title,
+                        vendor: vendor,
+                        price: price
+                    });
+                }
+            });
+
+            try {
+                // Show loading state with spinner
+                generateBtn.disabled = true;
+                generateBtn.classList.add('opacity-75');
+                generateText.textContent = 'Generating Images...';
+                document.getElementById('generateIcon').style.display = 'none';
+                document.getElementById('generateSpinner').style.display = 'block';
+                
+                // Simulate API call (replace with actual API call)
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                // Simulate successful image generation
+                const imageResults = selectedData.map(product => ({
+                    product: product,
+                    images: [
+                        {
+                            url: `https://via.placeholder.com/400x400/6366f1/ffffff?text=${encodeURIComponent(product.title.substring(0, 20))}`,
+                            style: 'Studio',
+                            prompt: `Professional studio shot of ${product.title} on clean white background`
+                        },
+                        {
+                            url: `https://via.placeholder.com/400x400/8b5cf6/ffffff?text=${encodeURIComponent(product.title.substring(0, 20))}`,
+                            style: 'Lifestyle',
+                            prompt: `${product.title} in modern lifestyle setting with natural lighting`
+                        },
+                        {
+                            url: `https://via.placeholder.com/400x400/06b6d4/ffffff?text=${encodeURIComponent(product.title.substring(0, 20))}`,
+                            style: 'Artistic',
+                            prompt: `Creative artistic composition featuring ${product.title} with dramatic lighting`
+                        }
+                    ]
+                }));
+                
+                // Display image results
+                displayImageResults(imageResults);
+                document.getElementById('imageResults').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error generating images:', error);
+                alert('Error generating images: ' + error.message);
+            } finally {
+                // Reset button state
+                generateBtn.disabled = false;
+                generateBtn.classList.remove('opacity-75');
+                generateText.textContent = 'Generate Images';
+                document.getElementById('generateIcon').style.display = 'block';
+                document.getElementById('generateSpinner').style.display = 'none';
+            }
+        }
+
+        // Display image generation results
+        function displayImageResults(results) {
+            const container = document.getElementById('imageResponsesContainer');
+            container.innerHTML = '';
+            
+            results.forEach((result, index) => {
+                const imageCard = document.createElement('div');
+                imageCard.className = 'bg-white rounded-xl p-6 shadow-sm';
+                imageCard.style.border = '1px solid var(--writer-gray-200)';
+                
+                let cardHTML = `
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-lg font-semibold" style="color: var(--writer-gray-800);">
+                            🎨 ${result.product.title}
+                        </h4>
+                        <div class="text-sm" style="color: var(--writer-gray-600);">
+                            ${result.product.vendor} • ${result.product.price}
+                        </div>
+                    </div>
+                `;
+                
+                if (result.images && result.images.length > 0) {
+                    cardHTML += `
+                        <div class="mb-4">
+                            <h5 class="text-md font-semibold mb-3" style="color: var(--writer-gray-800);">Generated Images</h5>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    `;
+                    
+                    result.images.forEach((image, imgIndex) => {
+                        cardHTML += `
+                            <div class="bg-gray-50 rounded-lg p-3">
+                                <img src="${image.url}" alt="${image.style} style ${result.product.title}" 
+                                     class="w-full h-48 object-cover rounded-lg mb-2">
+                                <div class="text-xs font-medium mb-1" style="color: var(--writer-gray-700);">
+                                    ${image.style} Style
+                                </div>
+                                <div class="text-xs" style="color: var(--writer-gray-600);">
+                                    ${image.prompt}
+                                </div>
+                                <button onclick="downloadImage('${image.url}', '${result.product.title}_${image.style}')" 
+                                        class="mt-2 text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100">
+                                    Download
+                                </button>
+                            </div>
+                        `;
+                    });
+                    
+                    cardHTML += `</div></div>`;
+                }
+                
+                imageCard.innerHTML = cardHTML;
+                container.appendChild(imageCard);
+            });
+        }
+
+        // Download individual image
+        function downloadImage(url, filename) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename + '.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Download all images
+        function downloadAllImages() {
+            const images = document.querySelectorAll('#imageResponsesContainer img');
+            images.forEach((img, index) => {
+                setTimeout(() => {
+                    const link = document.createElement('a');
+                    link.href = img.src;
+                    link.download = `generated_image_${index + 1}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }, index * 500); // Stagger downloads
+            });
+        }
+
+        // Copy image URLs to clipboard
+        function copyImageUrls() {
+            const images = document.querySelectorAll('#imageResponsesContainer img');
+            const urls = Array.from(images).map(img => img.src);
+            const urlText = urls.join('\n');
+            
+            navigator.clipboard.writeText(urlText).then(() => {
+                alert('Image URLs copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy URLs: ', err);
+            });
+        }
+
+        // Clear image selection
+        function clearImageSelection() {
+            clearSelection();
+            updateImageSelectedProducts();
+            document.getElementById('imageResults').style.display = 'none';
+        }
+
+        // Toggle edit mode for editable content
+        function toggleEditMode(elementId) {
+            const element = document.getElementById(elementId);
+            const button = element.closest('.mb-4').querySelector('button[onclick*="toggleEditMode"]');
+            const editText = button.querySelector('.edit-text');
+            const saveText = button.querySelector('.save-text');
+            
+            if (element.contentEditable === 'false') {
+                // Enter edit mode
+                element.contentEditable = 'true';
+                element.classList.add('editing-mode');
+                element.focus();
+                
+                // Update button text
+                editText.style.display = 'none';
+                saveText.style.display = 'inline';
+                button.classList.remove('text-blue-600');
+                button.classList.add('text-green-600');
+                
+                // Store original content for potential cancel
+                element.dataset.editingContent = element.innerHTML;
+                
+                // Select all text for easy editing
+                selectAllText(element);
+            } else {
+                // Save and exit edit mode
+                saveContent(elementId);
+            }
+        }
+        
+        // Save content and exit edit mode
+        function saveContent(elementId) {
+            const element = document.getElementById(elementId);
+            const button = element.closest('.mb-4').querySelector('button[onclick*="toggleEditMode"]');
+            const editText = button.querySelector('.edit-text');
+            const saveText = button.querySelector('.save-text');
+            
+            // Exit edit mode
+            element.contentEditable = 'false';
+            element.classList.remove('editing-mode');
+            
+            // Update button text
+            editText.style.display = 'inline';
+            saveText.style.display = 'none';
+            button.classList.remove('text-green-600');
+            button.classList.add('text-blue-600');
+            
+            // Optional: Show save confirmation
+            showSaveConfirmation(element);
+        }
+        
+        // Handle keyboard shortcuts in edit mode
+        function handleKeyDown(event, elementId) {
+            const element = document.getElementById(elementId);
+            
+            // Save on Ctrl+Enter or Cmd+Enter
+            if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                event.preventDefault();
+                saveContent(elementId);
+                return;
+            }
+            
+            // Cancel on Escape
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                cancelEdit(elementId);
+                return;
+            }
+        }
+        
+        // Cancel edit and restore original content
+        function cancelEdit(elementId) {
+            const element = document.getElementById(elementId);
+            const button = element.closest('.mb-4').querySelector('button[onclick*="toggleEditMode"]');
+            const editText = button.querySelector('.edit-text');
+            const saveText = button.querySelector('.save-text');
+            
+            // Restore original content
+            if (element.dataset.editingContent) {
+                element.innerHTML = element.dataset.editingContent;
+                delete element.dataset.editingContent;
+            }
+            
+            // Exit edit mode
+            element.contentEditable = 'false';
+            element.classList.remove('editing-mode');
+            
+            // Update button text
+            editText.style.display = 'inline';
+            saveText.style.display = 'none';
+            button.classList.remove('text-green-600');
+            button.classList.add('text-blue-600');
+        }
+        
+        // Select all text in an element
+        function selectAllText(element) {
+            const range = document.createRange();
+            range.selectNodeContents(element);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+        
+        // Show save confirmation
+        function showSaveConfirmation(element) {
+            const originalBorder = element.style.borderColor;
+            element.style.borderColor = '#10b981';
+            element.style.borderWidth = '2px';
+            
+            setTimeout(() => {
+                element.style.borderColor = originalBorder;
+                element.style.borderWidth = '1px';
+            }, 1000);
+        }
+
+        // Generate images from Instagram post
+        function generateImagesFromPost(postIndex) {
+            const productCards = document.querySelectorAll('#productResponsesContainer .bg-white');
+            if (productCards[postIndex]) {
+                const productTitle = productCards[postIndex].querySelector('h4').textContent.replace('📦 ', '');
+                const productInfo = productCards[postIndex].querySelector('.text-sm').textContent;
+                
+                // Extract vendor and price from the product info
+                const infoParts = productInfo.split(' • ');
+                const vendor = infoParts[0] || 'Unknown Brand';
+                const price = infoParts[1] || 'N/A';
+                
+                // Get selected image ideas (or all if none selected)
+                const selectedImagePrompts = productCards[postIndex].querySelectorAll('.image-idea.selected p');
+                const allImagePrompts = productCards[postIndex].querySelectorAll('.image-idea p');
+                const imagePromptsToUse = selectedImagePrompts.length > 0 ? selectedImagePrompts : allImagePrompts;
+                
+                if (imagePromptsToUse.length === 0) {
+                    alert('No image ideas found for this product.');
+                    return;
+                }
+                
+                const prompts = Array.from(imagePromptsToUse).map(p => p.textContent);
+                
+                const productData = {
+                    title: productTitle,
+                    vendor: vendor,
+                    price: price,
+                    prompts: prompts
+                };
+                
+                // Switch to Image Generation tab
+                switchTab('image');
+                
+                // Wait a moment for the tab to switch, then populate and start
+                setTimeout(() => {
+                    // Clear existing image products and store manual product data
+                    selectedProducts.clear();
+                    
+                    // Manually populate the image selected products display
+                    const imageSelectedDiv = document.getElementById('imageSelectedProducts');
+                    const imageProductList = document.getElementById('imageProductList');
+                    
+                    imageSelectedDiv.style.display = 'block';
+                    imageProductList.innerHTML = '';
+                    
+                    const productItem = document.createElement('div');
+                    productItem.className = 'flex items-center justify-between p-3 rounded-lg border';
+                    productItem.style.backgroundColor = 'var(--writer-gray-50)';
+                    productItem.style.borderColor = 'var(--writer-gray-200)';
+                    productItem.innerHTML = `
+                        <span class="text-sm font-medium" style="color: var(--writer-gray-700);">${productData.title}</span>
+                        <span class="text-sm font-bold" style="color: var(--writer-blue);">${productData.price}</span>
+                    `;
+                    imageProductList.appendChild(productItem);
+                    
+                    // Show a message that we're generating images for this product
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-700';
+                    messageDiv.innerHTML = `
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>Generating images for <strong>${productTitle}</strong> using ${prompts.length} image idea(s)...</span>
+                        </div>
+                    `;
+                    
+                    // Insert message at the top of the image tab content
+                    const imageContent = document.querySelector('#image-tab-content .flex-1');
+                    if (imageContent) {
+                        imageContent.insertBefore(messageDiv, imageContent.firstChild);
+                        
+                        // Remove the message after 3 seconds
+                        setTimeout(() => {
+                            if (messageDiv.parentNode) {
+                                messageDiv.parentNode.removeChild(messageDiv);
+                            }
+                        }, 3000);
+                    }
+                    
+                    // Automatically start the image generation with Firefly
+                    setTimeout(() => {
+                        generateFireflyImages(productData);
+                    }, 500);
+                }, 200);
+            }
+        }
+
+        // Generate Firefly Access Token via server
+        async function generateFireflyAccessToken(clientId, clientSecret) {
+            try {
+                const response = await fetch('/api/firefly/token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        client_id: clientId,
+                        client_secret: clientSecret
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to get access token: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to generate access token');
+                }
+                
+                return data.access_token;
+            } catch (error) {
+                console.error('Error generating Firefly access token:', error);
+                throw error;
+            }
+        }
+
+        // Generate images using Adobe Firefly API via server
+        async function generateFireflyImages(productData) {
+            // Credentials are now handled via environment variables in the backend
+
+            const generateBtn = document.getElementById('generateBtn');
+            const generateText = document.getElementById('generateText');
+            
+            try {
+                // Show loading state
+                if (generateBtn) {
+                    generateBtn.disabled = true;
+                    generateBtn.classList.add('opacity-75');
+                    generateText.textContent = 'Generating Images with Firefly...';
+                    document.getElementById('generateIcon').style.display = 'none';
+                    document.getElementById('generateSpinner').style.display = 'block';
+                }
+                
+                // Generate images via server API (token management handled automatically by backend)
+                const response = await fetch('/api/firefly/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompts: productData.prompts
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to generate images');
+                }
+                
+                // Display Firefly image results
+                displayFireflyImageResults([{
+                    product: productData,
+                    results: data.results
+                }]);
+                document.getElementById('imageResults').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error generating Firefly images:', error);
+                alert('Error generating images: ' + error.message);
+            } finally {
+                // Reset button state
+                if (generateBtn) {
+                    generateBtn.disabled = false;
+                    generateBtn.classList.remove('opacity-75');
+                    generateText.textContent = 'Generate Images';
+                    document.getElementById('generateIcon').style.display = 'block';
+                    document.getElementById('generateSpinner').style.display = 'none';
+                }
+            }
+        }
+
+
+        // Display Firefly image generation results
+        function displayFireflyImageResults(results) {
+            const container = document.getElementById('imageResponsesContainer');
+            container.innerHTML = '';
+            
+            results.forEach((result, index) => {
+                const imageCard = document.createElement('div');
+                imageCard.className = 'bg-white rounded-xl p-6 shadow-sm';
+                imageCard.style.border = '1px solid var(--writer-gray-200)';
+                
+                let cardHTML = `
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-lg font-semibold" style="color: var(--writer-gray-800);">
+                            🎨 ${result.product.title}
+                        </h4>
+                        <div class="text-sm" style="color: var(--writer-gray-600);">
+                            ${result.product.vendor} • ${result.product.price}
+                        </div>
+                    </div>
+                `;
+                
+                if (result.results && result.results.length > 0) {
+                    result.results.forEach((promptResult, promptIndex) => {
+                        cardHTML += `
+                            <div class="mb-6">
+                                <h5 class="text-md font-semibold mb-3" style="color: var(--writer-gray-800);">
+                                    💡 Image Idea ${promptIndex + 1}
+                                </h5>
+                                <div class="bg-gray-50 rounded-lg p-3 mb-3">
+                                    <p class="text-sm" style="color: var(--writer-gray-700);">${promptResult.prompt}</p>
+                                </div>
+                        `;
+                        
+                        if (promptResult.error) {
+                            cardHTML += `
+                                <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                                    ❌ Error: ${promptResult.error}
+                                </div>
+                            `;
+                        } else if (promptResult.images && promptResult.images.length > 0) {
+                            cardHTML += `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
+                            
+                            promptResult.images.forEach((image, imgIndex) => {
+                                const imageId = `img-${index}-${promptIndex}-${imgIndex}`;
+                                
+                                cardHTML += `
+                                    <div class="bg-white rounded-lg border p-3 relative" id="${imageId}">
+                                        <img src="${image.url}" alt="Generated image for ${promptResult.prompt}" 
+                                             class="w-full h-64 object-cover rounded-lg mb-2">
+                                        <div class="text-xs text-gray-500 mb-2">
+                                            Seed: ${image.seed}
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button class="instagram-btn flex-1 text-xs px-3 py-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
+                                                    data-image-id="${imageId}"
+                                                    data-image-url="${image.url}"
+                                                    data-prompt="${promptResult.prompt}"
+                                                    data-product-title="${result.product.title}"
+                                                    data-product-index="${index}">
+                                                📱 Create Instagram Post
+                                            </button>
+                                            <button class="download-btn flex-1 text-xs px-3 py-2 bg-purple-50 text-purple-600 rounded hover:bg-purple-100 transition-colors"
+                                                    data-image-url="${image.url}"
+                                                    data-filename="${result.product.title}_idea${promptIndex + 1}_${imgIndex + 1}">
+                                                💾 Download
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                            
+                            cardHTML += `</div>`;
+                        } else {
+                            cardHTML += `
+                                <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-700">
+                                    ⚠️ No images generated for this prompt
+                                </div>
+                            `;
+                        }
+                        
+                        cardHTML += `</div>`;
+                    });
+                }
+                
+                imageCard.innerHTML = cardHTML;
+                container.appendChild(imageCard);
+            });
+            
+            // Add event listeners for Instagram and download buttons
+            setupImageButtonListeners();
+        }
+        
+        // Setup event listeners for image buttons
+        function setupImageButtonListeners() {
+            const container = document.getElementById('imageResponsesContainer');
+            
+            // Remove existing listeners to prevent duplicates
+            container.removeEventListener('click', handleImageButtonClick);
+            
+            // Add event listener for button clicks
+            container.addEventListener('click', handleImageButtonClick);
+        }
+        
+        // Handle Instagram and download button clicks
+        function handleImageButtonClick(event) {
+            if (event.target.classList.contains('instagram-btn')) {
+                const imageId = event.target.getAttribute('data-image-id');
+                const imageUrl = event.target.getAttribute('data-image-url');
+                const prompt = event.target.getAttribute('data-prompt');
+                const productTitle = event.target.getAttribute('data-product-title');
+                const productIndex = parseInt(event.target.getAttribute('data-product-index'));
+                
+                selectImageForInstagram(imageId, imageUrl, prompt, productTitle, productIndex);
+            } else if (event.target.classList.contains('download-btn')) {
+                const imageUrl = event.target.getAttribute('data-image-url');
+                const filename = event.target.getAttribute('data-filename');
+                
+                downloadFireflyImage(imageUrl, filename);
+            }
+        }
+
+        // Download Firefly generated image
+        async function downloadFireflyImage(url, filename) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = filename + '.jpg';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                window.URL.revokeObjectURL(downloadUrl);
+            } catch (error) {
+                console.error('Error downloading image:', error);
+                alert('Error downloading image. Please try again.');
+            }
+        }
+
+        // Instagram Post Mock Functions
+        function selectImageForInstagram(imageId, imageUrl, prompt, productTitle, productIndex) {
+            // Find the Instagram caption and hashtags from the specific Social Derivative result card
+            const captionData = findInstagramCaptionAndHashtagsForProductIndex(productIndex);
+            
+            // Update Instagram mock with selected image and caption
+            document.getElementById('instagramImage').src = imageUrl;
+            document.getElementById('instagramImage').style.display = 'block';
+            document.getElementById('instagramImagePlaceholder').style.display = 'none';
+            
+            // Update Instagram caption with hashtags
+            const captionElement = document.getElementById('instagramCaption');
+            if (captionData && captionData.caption) {
+                let fullCaption = captionData.caption;
+                if (captionData.hashtags && captionData.hashtags.length > 0) {
+                    fullCaption += ' ' + captionData.hashtags.join(' ');
+                }
+                captionElement.textContent = fullCaption;
+            } else {
+                captionElement.textContent = `Check out this amazing ${productTitle}! ✨`;
+            }
+            
+            // Update username and timestamp (always use SuperPossible)
+            document.getElementById('instagramUsername').textContent = 'SuperPossible';
+            document.getElementById('instagramCaptionUsername').textContent = 'SuperPossible';
+            document.getElementById('instagramTimestamp').textContent = 'Just now';
+            document.getElementById('instagramLikes').textContent = Math.floor(Math.random() * 5000 + 500);
+            
+            // Store current Instagram data for posting
+            currentInstagramData = {
+                image_url: imageUrl,
+                caption: captionElement.textContent
+            };
+            
+            // Show Instagram mock
+            document.getElementById('instagramMock').style.display = 'block';
+            
+            // Check Instagram authentication status
+            checkInstagramAuth();
+            
+            // Scroll to Instagram mock
+            document.getElementById('instagramMock').scrollIntoView({ behavior: 'smooth' });
+            
+            // Add selection styling to selected image
+            document.querySelectorAll('.bg-white.rounded-lg.border.p-3').forEach(img => {
+                img.style.borderColor = 'var(--writer-gray-200)';
+                img.style.boxShadow = '';
+            });
+            
+            const selectedImage = document.getElementById(imageId);
+            if (selectedImage) {
+                selectedImage.style.borderColor = 'var(--writer-primary)';
+                selectedImage.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.2)';
+            }
+        }
+        
+        function findInstagramCaptionAndHashtagsForProductIndex(productIndex) {
+            // Look for Instagram caption and hashtags in the specific Social Derivative result card by index
+            const productCards = document.querySelectorAll('#productResponsesContainer .bg-white');
+            
+            if (productCards[productIndex]) {
+                const captionElement = productCards[productIndex].querySelector('.caption-text');
+                const hashtagElements = productCards[productIndex].querySelectorAll('.inline-block');
+                
+                let caption = null;
+                let hashtags = [];
+                
+                if (captionElement) {
+                    caption = captionElement.textContent.trim();
+                    // Don't remove hashtags from caption anymore since we want them in preview
+                }
+                
+                // Extract hashtags from hashtag elements
+                hashtagElements.forEach(element => {
+                    const text = element.textContent.trim();
+                    if (text.startsWith('#')) {
+                        hashtags.push(text);
+                    }
+                });
+                
+                return {
+                    caption: caption,
+                    hashtags: hashtags.slice(0, 3) // Limit to 3 hashtags
+                };
+            }
+            
+            return null;
+        }
+        
+        // Legacy function - kept for backward compatibility
+        function findInstagramCaptionForProductIndex(productIndex) {
+            const data = findInstagramCaptionAndHashtagsForProductIndex(productIndex);
+            if (data && data.caption) {
+                // Remove hashtags for legacy compatibility
+                return data.caption.replace(/#\w+/g, '').replace(/\s+/g, ' ').trim();
+            }
+            return null;
+        }
+        
+        // Legacy function - kept for backward compatibility
+        function findInstagramCaptionForProduct(productTitle) {
+            // Look for Instagram caption in the Social Derivative results
+            const productCards = document.querySelectorAll('#productResponsesContainer .bg-white');
+            
+            for (let card of productCards) {
+                const cardTitle = card.querySelector('h4');
+                if (cardTitle && cardTitle.textContent.includes(productTitle)) {
+                    const captionElement = card.querySelector('.caption-text');
+                    if (captionElement) {
+                        let caption = captionElement.textContent.trim();
+                        // Remove hashtags as requested
+                        caption = caption.replace(/#\w+/g, '').replace(/\s+/g, ' ').trim();
+                        return caption;
+                    }
+                }
+            }
+            
+            return null;
+        }
+        
+        function closeInstagramMock() {
+            document.getElementById('instagramMock').style.display = 'none';
+            
+            // Remove selection styling from all images
+            document.querySelectorAll('.bg-white.rounded-lg.border.p-3').forEach(img => {
+                img.style.borderColor = 'var(--writer-gray-200)';
+                img.style.boxShadow = '';
+            });
+        }
+
+        // Instagram posting functionality
+        let currentInstagramData = null;
+
+        function checkInstagramAuth() {
+            // Check if Instagram credentials are configured
+            // This will be called when the preview opens
+            fetch('/api/instagram/auth-url')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show post button if auth URL can be generated (means app is configured)
+                        document.getElementById('postToInstagramBtn').style.display = 'inline-block';
+                        document.getElementById('instagramAuthSection').style.display = 'none';
+                    } else {
+                        // Show auth section if not configured
+                        document.getElementById('postToInstagramBtn').style.display = 'none';
+                        document.getElementById('instagramAuthSection').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking Instagram auth:', error);
+                    // Show auth section on error
+                    document.getElementById('postToInstagramBtn').style.display = 'none';
+                    document.getElementById('instagramAuthSection').style.display = 'block';
+                });
+        }
+
+        function authorizeInstagram() {
+            fetch('/api/instagram/auth-url')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Open Instagram authorization in new window
+                        window.open(data.auth_url, 'instagram_auth', 'width=600,height=700');
+                        
+                        // Show instructions
+                        alert('Please complete the Instagram authorization in the new window. After authorization, restart the app and try again.');
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error getting Instagram auth URL:', error);
+                    alert('Error connecting to Instagram. Please check your configuration.');
+                });
+        }
+
+        function postToInstagram() {
+            if (!currentInstagramData) {
+                alert('No Instagram post data available. Please select an image first.');
+                return;
+            }
+
+            const postBtn = document.getElementById('postToInstagramBtn');
+            const originalText = postBtn.innerHTML;
+            
+            // Show loading state
+            postBtn.innerHTML = '⏳ Posting...';
+            postBtn.disabled = true;
+
+            fetch('/api/instagram/post', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(currentInstagramData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Successfully posted to Instagram!');
+                    
+                    // Update button to show success
+                    postBtn.innerHTML = '✅ Posted!';
+                    setTimeout(() => {
+                        postBtn.innerHTML = originalText;
+                        postBtn.disabled = false;
+                    }, 3000);
+                } else {
+                    alert('❌ Error posting to Instagram: ' + data.error);
+                    postBtn.innerHTML = originalText;
+                    postBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error posting to Instagram:', error);
+                alert('❌ Error posting to Instagram. Please try again.');
+                postBtn.innerHTML = originalText;
+                postBtn.disabled = false;
+            });
+        }
+
+        // Override the existing updateSelectedProducts to also update Writer, Enhancement, and Image tabs
+        const originalUpdateSelectedProducts = updateSelectedProducts;
+        updateSelectedProducts = function() {
+            originalUpdateSelectedProducts();
+            updateWriterSelectedProducts();
+            updateEnhancementSelectedProducts();
+            updateImageSelectedProducts();
+        };
+    </script>
+</body>
+</html>

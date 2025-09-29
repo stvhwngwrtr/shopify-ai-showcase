@@ -1,0 +1,6 @@
+writer==0.8.3rc7
+ShopifyAPI==12.4.0
+requests==2.31.0
+Flask==2.3.3
+Jinja2>=3.1.4
+python-dotenv==1.0.0
