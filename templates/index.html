@@ -2811,10 +2811,11 @@
                                     ❌ Error: ${promptResult.error}
                                 </div>
                             `;
-                        } else if (promptResult.used_fallback) {
+                        } else if (promptResult.used_fallback || promptResult.fallback_info) {
+                            const fallbackMessage = promptResult.fallback_info || "AI image generation unavailable. Using Shopify product image as fallback.";
                             cardHTML += `
                                 <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
-                                    ℹ️ AI image generation unavailable. Using Shopify product image as fallback.
+                                    ℹ️ ${fallbackMessage}
                                 </div>
                             `;
                         } else if (promptResult.images && promptResult.images.length > 0) {

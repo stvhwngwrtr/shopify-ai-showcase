@@ -260,7 +260,8 @@ def make_firefly_api_call_with_retry(url, data, client_id, max_retries=2):
     # If we've exhausted all retries
     return {
         'success': False,
-        'error': f"Failed to authenticate with Firefly API after {max_retries} attempts"
+        'error': f"Firefly API authentication failed after {max_retries} attempts - likely due to entitlement issues",
+        'error_code': 'authentication_failed'
     }
 
 app = Flask(__name__)
@@ -1043,6 +1044,10 @@ def generate_firefly_images():
                     else:
                         api_error_for_prompt = api_result.get('error', 'Unknown API error')
                         print(f"Firefly API error for prompt '{prompt}': {api_error_for_prompt}")
+                        
+                        # Check if it's the entitlement issue
+                        if 'user_not_entitled' in str(api_result.get('error', '')).lower() or 'entitlement' in str(api_result.get('error', '')).lower():
+                            api_error_for_prompt = "Firefly API entitlement issue - using Shopify product images as fallback"
                 
                 # If Firefly failed and we have no images, try to use Shopify product images as fallback
                 if not prompt_images and products:
@@ -1064,11 +1069,23 @@ def generate_firefly_images():
                             print(f"✅ Using Shopify image fallback from product: {product.get('title', 'Unknown')}")
                             break
                 
+                # Determine if fallback was used
+                used_fallback = len(prompt_images) > 0 and any(img.get('is_fallback') for img in prompt_images)
+                
+                # If we have images (either AI or fallback), no error should be shown
+                error_message = None
+                if not prompt_images:
+                    error_message = api_error_for_prompt or f"Failed to generate images for prompt: {prompt}"
+                elif used_fallback:
+                    # When using fallback, we can optionally include an info message, but not an error
+                    error_message = None
+                
                 results.append({
                     "prompt": prompt,
                     "images": prompt_images,
-                    "error": None if prompt_images else (api_error_for_prompt or f"Failed to generate images for prompt: {prompt}"),
-                    "used_fallback": len(prompt_images) > 0 and any(img.get('is_fallback') for img in prompt_images)
+                    "error": error_message,
+                    "used_fallback": used_fallback,
+                    "fallback_info": "AI image generation unavailable - using Shopify product image" if used_fallback else None
                 })
                 
             except Exception as prompt_error:
