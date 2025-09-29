@@ -232,10 +232,23 @@ def make_firefly_api_call_with_retry(url, data, client_id, max_retries=2):
             
             # For other errors, return immediately
             else:
+                error_msg = f"Firefly API error: {response.status_code}"
+                
+                # Try to parse JSON error response for more details
+                try:
+                    error_data = response.json()
+                    if error_data.get('error_code') == 'user_not_entitled':
+                        error_msg = f"Firefly API Entitlement Error: {error_data.get('message', 'User not entitled to Firefly API services')}. Please check your Adobe Developer Console for proper Firefly API access."
+                    else:
+                        error_msg += f" - {error_data.get('message', error_data.get('error', 'Unknown error'))}"
+                except:
+                    error_msg += f" - {response.text}"
+                
                 return {
                     'success': False,
-                    'error': f"Firefly API error: {response.status_code} - {response.text}",
-                    'status_code': response.status_code
+                    'error': error_msg,
+                    'status_code': response.status_code,
+                    'error_code': error_data.get('error_code') if 'error_data' in locals() else None
                 }
                 
         except requests.exceptions.RequestException as e:
@@ -811,6 +824,68 @@ Target Demographic: {target_demographic.replace('-', ' ').title()}
 def health():
     """Health check endpoint."""
     return jsonify({"status": "healthy", "message": "Shopify Product Showcase is running"})
+
+@app.route('/api/firefly/debug', methods=['GET'])
+def debug_firefly():
+    """Debug endpoint to test Firefly API authentication and entitlements."""
+    try:
+        client_id = os.getenv('FIREFLY_CLIENT_ID')
+        client_secret = os.getenv('FIREFLY_CLIENT_SECRET')
+        
+        if not client_id or not client_secret:
+            return jsonify({
+                "success": False,
+                "error": "Firefly credentials not configured",
+                "client_id_present": bool(client_id),
+                "client_secret_present": bool(client_secret)
+            })
+        
+        # Test token generation
+        print("🔍 Testing Firefly token generation...")
+        token_result = firefly_token_manager.get_fresh_token(client_id, client_secret)
+        
+        if not token_result['success']:
+            return jsonify({
+                "success": False,
+                "step": "token_generation",
+                "error": token_result.get('error'),
+                "client_id": client_id[:8] + "..."
+            })
+        
+        # Test a simple API call to check entitlements
+        print("🔍 Testing Firefly API entitlements...")
+        test_url = 'https://firefly-api.adobe.io/v2/images/generate'
+        test_data = {
+            "prompt": "test prompt for entitlement check",
+            "n": 1,
+            "size": {"width": 512, "height": 512}
+        }
+        
+        api_result = make_firefly_api_call_with_retry(test_url, test_data, client_id, max_retries=1)
+        
+        debug_info = {
+            "success": api_result['success'],
+            "token_expires_in": token_result.get('expires_in'),
+            "client_id": client_id[:8] + "...",
+            "api_test_result": {
+                "success": api_result['success'],
+                "error": api_result.get('error'),
+                "error_code": api_result.get('error_code'),
+                "status_code": api_result.get('status_code')
+            }
+        }
+        
+        if api_result.get('error_code') == 'user_not_entitled':
+            debug_info["entitlement_issue"] = True
+            debug_info["solution"] = "Visit https://developer.adobe.com/console/home and ensure your project has Firefly API access enabled"
+        
+        return jsonify(debug_info)
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Debug test failed: {str(e)}"
+        })
 
 @app.route('/test-writer')
 def test_writer():
