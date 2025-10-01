@@ -12,7 +12,7 @@ Before you begin, make sure you have:
    - Access token with `read_products` and `read_inventory` permissions
 3. **Optional AI service credentials**:
    - Writer AI API key and application ID
-   - Adobe Firefly client ID and secret
+   - OpenAI API key for DALL-E image generation
 
 ## Step 1: Push Your Code to GitHub
 
@@ -61,8 +61,7 @@ SHOPIFY_ACCESS_TOKEN=your_actual_access_token
 
 ### Optional Variables (for AI features)
 ```
-FIREFLY_CLIENT_ID=your_firefly_client_id
-FIREFLY_CLIENT_SECRET=your_firefly_client_secret
+OPENAI_API_KEY=your_openai_api_key
 ```
 
 ### System Variables (usually defaults are fine)
@@ -98,8 +97,7 @@ Test these endpoints:
 | `SHOPIFY_SHOP_NAME` | Your shop name without .myshopify.com | ✅ | `my-awesome-store` |
 | `SHOPIFY_ACCESS_TOKEN` | Shopify Admin API access token | ✅ | `shpat_xxxxx` |
 | `SHOPIFY_API_VERSION` | Shopify API version | ❌ | `2023-10` |
-| `FIREFLY_CLIENT_ID` | Adobe Firefly client ID | ❌ | `xxxxx` |
-| `FIREFLY_CLIENT_SECRET` | Adobe Firefly client secret | ❌ | `xxxxx` |
+| `OPENAI_API_KEY` | OpenAI API key for DALL-E | ❌ | `sk-xxxxx` |
 | `DEBUG` | Enable debug mode | ❌ | `false` |
 | `PORT` | Application port | ❌ | `8080` |
 

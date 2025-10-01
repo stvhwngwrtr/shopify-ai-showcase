@@ -219,7 +219,7 @@
                 </div>
             </div>
             <h1 class="text-4xl font-bold mb-4" style="color: var(--writer-gray-900);">Product Showcase</h1>
-            <p class="text-lg" style="color: var(--writer-gray-600);">Transform your Shopify products with AI-powered content generation using Writer and Adobe Firefly. Enhance product descriptions with targeted messaging, create engaging Instagram posts with Writer AI, and generate professional product images - all optimized for your specific audience and language preferences.</p>
+            <p class="text-lg" style="color: var(--writer-gray-600);">Transform your Shopify products with AI-powered content generation using Writer and OpenAI DALL-E. Enhance product descriptions with targeted messaging, create engaging Instagram posts with Writer AI, and generate professional product images - all optimized for your specific audience and language preferences.</p>
         </div>
 
         <!-- Tab Navigation -->
@@ -2671,47 +2671,43 @@
                         }, 3000);
                     }
                     
-                    // Automatically start the image generation with Firefly
+                    // Automatically start the image generation with DALL-E
                     setTimeout(() => {
-                        generateFireflyImages(productData);
+                        generateDalleImages(productData);
                     }, 500);
                 }, 200);
             }
         }
 
-        // Generate Firefly Access Token via server
-        async function generateFireflyAccessToken(clientId, clientSecret) {
+        // Check DALL-E API status via server
+        async function checkDalleStatus() {
             try {
-                const response = await fetch('/api/firefly/token', {
-                    method: 'POST',
+                const response = await fetch('/api/dalle/status', {
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        client_id: clientId,
-                        client_secret: clientSecret
-                    })
+                    }
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Failed to get access token: ${response.status}`);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 const data = await response.json();
                 
                 if (!data.success) {
-                    throw new Error(data.error || 'Failed to generate access token');
+                    throw new Error(data.error || 'DALL-E API not configured');
                 }
-                
-                return data.access_token;
+
+                return data.success;
             } catch (error) {
-                console.error('Error generating Firefly access token:', error);
+                console.error('Error checking DALL-E status:', error);
                 throw error;
             }
         }
 
-        // Generate images using Adobe Firefly API via server
-        async function generateFireflyImages(productData) {
+        // Generate images using OpenAI DALL-E API via server
+        async function generateDalleImages(productData) {
             // Credentials are now handled via environment variables in the backend
 
             const generateBtn = document.getElementById('generateBtn');
@@ -2722,13 +2718,13 @@
                 if (generateBtn) {
                     generateBtn.disabled = true;
                     generateBtn.classList.add('opacity-75');
-                    generateText.textContent = 'Generating Images with Firefly...';
+                    generateText.textContent = 'Generating Images with DALL-E...';
                     document.getElementById('generateIcon').style.display = 'none';
                     document.getElementById('generateSpinner').style.display = 'block';
                 }
                 
                 // Generate images via server API (token management handled automatically by backend)
-                const response = await fetch('/api/firefly/generate', {
+                const response = await fetch('/api/dalle/generate', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2749,15 +2745,15 @@
                     throw new Error(data.error || 'Failed to generate images');
                 }
                 
-                // Display Firefly image results
-                displayFireflyImageResults([{
+                // Display DALL-E image results
+                displayDalleImageResults([{
                     product: productData,
                     results: data.results
                 }]);
                 document.getElementById('imageResults').style.display = 'block';
                 
             } catch (error) {
-                console.error('Error generating Firefly images:', error);
+                console.error('Error generating DALL-E images:', error);
                 alert('Error generating images: ' + error.message);
             } finally {
                 // Reset button state
@@ -2772,8 +2768,8 @@
         }
 
 
-        // Display Firefly image generation results
-        function displayFireflyImageResults(results) {
+        // Display DALL-E image generation results
+        function displayDalleImageResults(results) {
             const container = document.getElementById('imageResponsesContainer');
             container.innerHTML = '';
             
@@ -2829,7 +2825,7 @@
                                         <img src="${image.url}" alt="Generated image for ${promptResult.prompt}" 
                                              class="w-full h-64 object-cover rounded-lg mb-2">
                                         <div class="text-xs text-gray-500 mb-2">
-                                            Seed: ${image.seed}
+                                            ${image.seed ? `Seed: ${image.seed}` : 'Generated with DALL-E 3'}
                                         </div>
                                         <div class="flex gap-2">
                                             <button class="instagram-btn flex-1 text-xs px-3 py-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
@@ -2896,12 +2892,12 @@
                 const imageUrl = event.target.getAttribute('data-image-url');
                 const filename = event.target.getAttribute('data-filename');
                 
-                downloadFireflyImage(imageUrl, filename);
+                downloadDalleImage(imageUrl, filename);
             }
         }
 
-        // Download Firefly generated image
-        async function downloadFireflyImage(url, filename) {
+        // Download DALL-E generated image
+        async function downloadDalleImage(url, filename) {
             try {
                 const response = await fetch(url);
                 const blob = await response.blob();

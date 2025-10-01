@@ -17,102 +17,26 @@ if not os.getenv('SHOPIFY_SHOP_NAME'):
     print("⚠️ Warning: SHOPIFY_SHOP_NAME not set in environment variables")
 if not os.getenv('SHOPIFY_ACCESS_TOKEN'):
     print("⚠️ Warning: SHOPIFY_ACCESS_TOKEN not set in environment variables")
+if not os.getenv('OPENAI_API_KEY'):
+    print("⚠️ Warning: OPENAI_API_KEY not set in environment variables")
 
-# Token management system
-class FireflyTokenManager:
-    def __init__(self):
-        self.token_data = None
-        self.expires_at = None
-        self.lock = threading.Lock()
-        
-    def is_token_valid(self):
-        """Check if current token is valid and not expired."""
-        if not self.token_data or not self.expires_at:
-            return False
-        
-        # Check if token expires in the next 5 minutes (buffer for safety)
-        return datetime.now() + timedelta(minutes=5) < self.expires_at
-    
-    def get_fresh_token(self, client_id=None, client_secret=None):
-        """Get a fresh token, refreshing if necessary."""
-        with self.lock:
-            if self.is_token_valid():
-                return {
-                    'success': True,
-                    'access_token': self.token_data.get('access_token'),
-                    'expires_in': int((self.expires_at - datetime.now()).total_seconds())
-                }
-            
-            # Token is expired or doesn't exist, get a new one
-            return self._refresh_token(client_id, client_secret)
-    
-    def _refresh_token(self, client_id=None, client_secret=None):
-        """Internal method to refresh the token."""
-        try:
-            # Use provided credentials or fall back to environment variables
-            client_id = client_id or os.getenv('FIREFLY_CLIENT_ID')
-            client_secret = client_secret or os.getenv('FIREFLY_CLIENT_SECRET')
-            
-            if not client_id or not client_secret:
-                return {
-                    "success": False, 
-                    "error": "Client ID and Client Secret are required for token refresh."
-                }
-            
-            # Request new access token from Adobe
-            token_url = 'https://ims-na1.adobelogin.com/ims/token/v3'
-            token_data = {
-                'grant_type': 'client_credentials',
-                'client_id': client_id,
-                'client_secret': client_secret,
-                'scope': 'openid,AdobeID,session,additional_info,read_organizations,firefly_api,ff_apis'
-            }
-            
-            headers = {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            }
-            
-            print(f"🔄 Refreshing Firefly token...")
-            response = requests.post(token_url, data=token_data, headers=headers, timeout=30)
-            
-            if response.status_code == 200:
-                token_response = response.json()
-                
-                # Store token with expiration
-                self.token_data = token_response
-                expires_in_seconds = token_response.get('expires_in', 3600)  # Default 1 hour
-                self.expires_at = datetime.now() + timedelta(seconds=expires_in_seconds)
-                
-                print(f"✅ Token refreshed successfully, expires at: {self.expires_at}")
-                
-                return {
-                    "success": True, 
-                    "access_token": token_response.get('access_token'),
-                    "expires_in": expires_in_seconds
-                }
-            else:
-                error_msg = f"Token refresh failed: {response.status_code} - {response.text}"
-                print(f"❌ {error_msg}")
-                return {
-                    "success": False, 
-                    "error": error_msg
-                }
-                
-        except requests.exceptions.RequestException as e:
-            error_msg = f"Network error during token refresh: {str(e)}"
-            print(f"🔌 {error_msg}")
-            return {"success": False, "error": error_msg}
-        except Exception as e:
-            error_msg = f"Unexpected error during token refresh: {str(e)}"
-            print(f"💥 {error_msg}")
-            return {"success": False, "error": error_msg}
-
-# Global token manager instance
-firefly_token_manager = FireflyTokenManager()
+# OpenAI API key management
+def get_openai_api_key():
+    """Get OpenAI API key from environment variables."""
+    api_key = os.getenv('OPENAI_API_KEY')
+    if not api_key:
+        return {
+            "success": False,
+            "error": "OpenAI API key not found. Please set OPENAI_API_KEY environment variable."
+        }
+    return {
+        "success": True,
+        "api_key": api_key
+    }
 
 def validate_and_sanitize_prompt(prompt):
     """
-    Validate and sanitize prompts to ensure they're safe for Firefly API.
+    Validate and sanitize prompts to ensure they're safe for DALL-E API.
     Returns a tuple (is_safe, sanitized_prompt, reason).
     """
     if not prompt or not prompt.strip():
@@ -177,7 +101,7 @@ def validate_and_sanitize_prompt(prompt):
         if re.search(pattern, sanitized, re.IGNORECASE):
             return False, prompt, f"Contains potential prompt injection: {pattern}"
     
-    # Length check - Firefly has limits
+    # Length check - DALL-E has limits
     if len(sanitized) > 1000:
         sanitized = sanitized[:1000].rsplit(' ', 1)[0] + "..."
     
@@ -187,82 +111,33 @@ def validate_and_sanitize_prompt(prompt):
     
     return True, sanitized, "Safe"
 
-def make_firefly_api_call_with_retry(url, data, client_id, max_retries=2):
-    """Make a Firefly API call with automatic token refresh on authentication failures."""
-    
-    for attempt in range(max_retries):
-        # Get a fresh token
-        token_result = firefly_token_manager.get_fresh_token()
+def make_dalle_api_call(prompt, api_key, size="1024x1024", quality="standard", n=1):
+    """Make a DALL-E API call to generate images."""
+    try:
+        from openai import OpenAI
         
-        if not token_result['success']:
-            return {
-                'success': False,
-                'error': f"Failed to get access token: {token_result.get('error')}"
-            }
+        client = OpenAI(api_key=api_key)
         
-        access_token = token_result['access_token']
+        response = client.images.generate(
+            model="dall-e-3",
+            prompt=prompt,
+            size=size,
+            quality=quality,
+            n=n
+        )
         
-        headers = {
-            'Authorization': f'Bearer {access_token}',
-            'X-API-Key': client_id,
-            'Content-Type': 'application/json'
+        return {
+            'success': True,
+            'response': response
         }
         
-        try:
-            response = requests.post(url, json=data, headers=headers, timeout=60)
-            
-            # If successful, return the response
-            if response.status_code == 200:
-                return {
-                    'success': True,
-                    'response': response
-                }
-            
-            # If it's an authentication error, try refreshing the token
-            elif response.status_code in [401, 403]:
-                print(f"🔄 Authentication error (attempt {attempt + 1}/{max_retries}): {response.status_code}")
-                
-                # Force token refresh by clearing current token
-                firefly_token_manager.token_data = None
-                firefly_token_manager.expires_at = None
-                
-                if attempt < max_retries - 1:  # Don't sleep on the last attempt
-                    time.sleep(1)  # Brief pause before retry
-                continue
-            
-            # For other errors, return immediately
-            else:
-                error_msg = f"Firefly API error: {response.status_code}"
-                
-                # Try to parse JSON error response for more details
-                try:
-                    error_data = response.json()
-                    if error_data.get('error_code') == 'user_not_entitled':
-                        error_msg = f"Firefly API Entitlement Error: {error_data.get('message', 'User not entitled to Firefly API services')}. Please check your Adobe Developer Console for proper Firefly API access."
-                    else:
-                        error_msg += f" - {error_data.get('message', error_data.get('error', 'Unknown error'))}"
-                except:
-                    error_msg += f" - {response.text}"
-                
-                return {
-                    'success': False,
-                    'error': error_msg,
-                    'status_code': response.status_code,
-                    'error_code': error_data.get('error_code') if 'error_data' in locals() else None
-                }
-                
-        except requests.exceptions.RequestException as e:
-            return {
-                'success': False,
-                'error': f"Network error: {str(e)}"
-            }
-    
-    # If we've exhausted all retries
-    return {
-        'success': False,
-        'error': f"Firefly API authentication failed after {max_retries} attempts - likely due to entitlement issues",
-        'error_code': 'authentication_failed'
-    }
+    except Exception as e:
+        error_msg = f"DALL-E API error: {str(e)}"
+        print(f"❌ {error_msg}")
+        return {
+            'success': False,
+            'error': error_msg
+        }
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -826,59 +701,40 @@ def health():
     """Health check endpoint."""
     return jsonify({"status": "healthy", "message": "Shopify Product Showcase is running"})
 
-@app.route('/api/firefly/debug', methods=['GET'])
-def debug_firefly():
-    """Debug endpoint to test Firefly API authentication and entitlements."""
+@app.route('/api/dalle/debug', methods=['GET'])
+def debug_dalle():
+    """Debug endpoint to test DALL-E API authentication."""
     try:
-        client_id = os.getenv('FIREFLY_CLIENT_ID')
-        client_secret = os.getenv('FIREFLY_CLIENT_SECRET')
+        api_key_result = get_openai_api_key()
         
-        if not client_id or not client_secret:
+        if not api_key_result['success']:
             return jsonify({
                 "success": False,
-                "error": "Firefly credentials not configured",
-                "client_id_present": bool(client_id),
-                "client_secret_present": bool(client_secret)
+                "error": api_key_result.get('error'),
+                "api_key_present": False
             })
         
-        # Test token generation
-        print("🔍 Testing Firefly token generation...")
-        token_result = firefly_token_manager.get_fresh_token(client_id, client_secret)
+        api_key = api_key_result['api_key']
         
-        if not token_result['success']:
-            return jsonify({
-                "success": False,
-                "step": "token_generation",
-                "error": token_result.get('error'),
-                "client_id": client_id[:8] + "..."
-            })
+        # Test a simple API call to check authentication
+        print("🔍 Testing DALL-E API authentication...")
+        test_prompt = "A simple red apple for API testing"
         
-        # Test a simple API call to check entitlements
-        print("🔍 Testing Firefly API entitlements...")
-        test_url = 'https://firefly-api.adobe.io/v2/images/generate'
-        test_data = {
-            "prompt": "test prompt for entitlement check",
-            "n": 1,
-            "size": {"width": 512, "height": 512}
-        }
-        
-        api_result = make_firefly_api_call_with_retry(test_url, test_data, client_id, max_retries=1)
+        api_result = make_dalle_api_call(test_prompt, api_key, size="1024x1024", quality="standard", n=1)
         
         debug_info = {
             "success": api_result['success'],
-            "token_expires_in": token_result.get('expires_in'),
-            "client_id": client_id[:8] + "...",
+            "api_key": api_key[:8] + "...",
             "api_test_result": {
                 "success": api_result['success'],
-                "error": api_result.get('error'),
-                "error_code": api_result.get('error_code'),
-                "status_code": api_result.get('status_code')
+                "error": api_result.get('error')
             }
         }
         
-        if api_result.get('error_code') == 'user_not_entitled':
-            debug_info["entitlement_issue"] = True
-            debug_info["solution"] = "Visit https://developer.adobe.com/console/home and ensure your project has Firefly API access enabled"
+        if api_result['success']:
+            debug_info["message"] = "DALL-E API is working correctly"
+        else:
+            debug_info["solution"] = "Check your OpenAI API key and ensure you have sufficient credits"
         
         return jsonify(debug_info)
         
@@ -923,49 +779,44 @@ def test_writer():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
-@app.route('/api/firefly/token', methods=['POST'])
-def get_firefly_token():
-    """Get Adobe Firefly access token with automatic refresh capability."""
+@app.route('/api/dalle/status', methods=['GET'])
+def get_dalle_status():
+    """Check DALL-E API key status."""
     try:
-        data = request.get_json() or {}
+        api_key_result = get_openai_api_key()
         
-        # Try to get credentials from request, then fall back to environment variables
-        client_id = data.get('client_id') or os.getenv('FIREFLY_CLIENT_ID')
-        client_secret = data.get('client_secret') or os.getenv('FIREFLY_CLIENT_SECRET')
-        
-        print(f"🔑 Token request - Client ID present: {bool(client_id)}, Client Secret present: {bool(client_secret)}")
-        
-        # Use the token manager to get a fresh token
-        result = firefly_token_manager.get_fresh_token(client_id, client_secret)
-        
-        if result['success']:
-            print("✅ Token retrieved/refreshed successfully")
+        if api_key_result['success']:
+            print("✅ OpenAI API key is configured")
+            return jsonify({
+                "success": True,
+                "message": "OpenAI API key is configured",
+                "api_key": api_key_result['api_key'][:8] + "..."
+            })
         else:
-            print(f"❌ Token retrieval failed: {result.get('error')}")
-            
-        return jsonify(result)
+            print(f"❌ OpenAI API key not configured: {api_key_result.get('error')}")
+            return jsonify(api_key_result)
             
     except Exception as e:
         error_msg = f"Unexpected error: {str(e)}"
         print(f"💥 {error_msg}")
         return jsonify({"success": False, "error": error_msg})
 
-@app.route('/api/firefly/generate', methods=['POST'])
-def generate_firefly_images():
-    """Generate images using Adobe Firefly API with automatic token refresh, fallback to Shopify images."""
+@app.route('/api/dalle/generate', methods=['POST'])
+def generate_dalle_images():
+    """Generate images using DALL-E API with fallback to Shopify images."""
     try:
         data = request.get_json() or {}
-        client_id = data.get('client_id') or os.getenv('FIREFLY_CLIENT_ID')
+        api_key = data.get('api_key') or os.getenv('OPENAI_API_KEY')
         prompts = data.get('prompts', [])
         products = data.get('products', [])  # Optional: product data for fallback images
         
-        print(f"🎨 Generate request - Client ID present: {bool(client_id)}")
+        print(f"🎨 Generate request - API key present: {bool(api_key)}")
         print(f"🎨 Products for fallback: {len(products)} products provided")
         
-        if not client_id:
+        if not api_key:
             return jsonify({
                 "success": False, 
-                "error": "Client ID is required. Provide client_id in request or set FIREFLY_CLIENT_ID environment variable."
+                "error": "API key is required. Provide api_key in request or set OPENAI_API_KEY environment variable."
             })
         
         if not prompts:
@@ -995,63 +846,30 @@ def generate_firefly_images():
                 prompt_images = []
                 api_error_for_prompt = None
                 
-                for i in range(1):
-                    firefly_url = 'https://firefly-api.adobe.io/v2/images/generate'
-                    firefly_data = {
-                        "prompt": actual_prompt,
-                        "n": 1,
-                        "size": {
-                            "width": 1024,
-                            "height": 1024
-                        },
-                        "style": {
-                            "preset": "photo"
-                        }
-                    }
-                    
-                    # Use the retry mechanism for API calls
-                    api_result = make_firefly_api_call_with_retry(firefly_url, firefly_data, client_id)
-                    
-                    if api_result['success']:
-                        response = api_result['response']
-                        firefly_response = response.json()
-                        
-                        if firefly_response.get('outputs') and len(firefly_response['outputs']) > 0:
-                            output = firefly_response['outputs'][0]
-                            
-                            # Handle different possible response structures
-                            image_url = None
-                            if 'image' in output and 'presignedUrl' in output['image']:
-                                image_url = output['image']['presignedUrl']
-                            elif 'image' in output and 'url' in output['image']:
-                                image_url = output['image']['url']
-                            elif 'url' in output:
-                                image_url = output['url']
-                            elif 'image' in output and isinstance(output['image'], str):
-                                image_url = output['image']
-                            
-                            if image_url:
-                                prompt_images.append({
-                                    "url": image_url,
-                                    "seed": output.get('seed'),
-                                    "prompt": actual_prompt
-                                })
-                                print(f"✅ Generated image for prompt: {prompt[:50]}...")
-                            else:
-                                print(f"❌ Could not find image URL in Firefly response")
-                        else:
-                            print(f"❌ No outputs in Firefly response")
-                    else:
-                        api_error_for_prompt = api_result.get('error', 'Unknown API error')
-                        print(f"Firefly API error for prompt '{prompt}': {api_error_for_prompt}")
-                        
-                        # Check if it's the entitlement issue
-                        if 'user_not_entitled' in str(api_result.get('error', '')).lower() or 'entitlement' in str(api_result.get('error', '')).lower():
-                            api_error_for_prompt = "Firefly API entitlement issue - using Shopify product images as fallback"
+                # Make DALL-E API call
+                api_result = make_dalle_api_call(actual_prompt, api_key, size="1024x1024", quality="standard", n=1)
                 
-                # If Firefly failed and we have no images, try to use Shopify product images as fallback
+                if api_result['success']:
+                    response = api_result['response']
+                    
+                    if response.data and len(response.data) > 0:
+                        image_data = response.data[0]
+                        
+                        prompt_images.append({
+                            "url": image_data.url,
+                            "revised_prompt": getattr(image_data, 'revised_prompt', actual_prompt),
+                            "prompt": actual_prompt
+                        })
+                        print(f"✅ Generated image for prompt: {prompt[:50]}...")
+                    else:
+                        print(f"❌ No image data in DALL-E response")
+                else:
+                    api_error_for_prompt = api_result.get('error', 'Unknown API error')
+                    print(f"DALL-E API error for prompt '{prompt}': {api_error_for_prompt}")
+                
+                # If DALL-E failed and we have no images, try to use Shopify product images as fallback
                 if not prompt_images and products:
-                    print(f"🔄 Firefly failed, using Shopify product images as fallback for prompt: {prompt[:50]}...")
+                    print(f"🔄 DALL-E failed, using Shopify product images as fallback for prompt: {prompt[:50]}...")
                     
                     # Find a product with images to use as fallback
                     for product in products:
@@ -1060,8 +878,8 @@ def generate_firefly_images():
                             # Use the first available product image as fallback
                             fallback_image = {
                                 "url": product_images[0],
-                                "seed": "shopify-fallback",
-                                "prompt": f"Shopify product image for: {product.get('title', 'Unknown Product')}",
+                                "revised_prompt": f"Shopify product image for: {product.get('title', 'Unknown Product')}",
+                                "prompt": actual_prompt,
                                 "is_fallback": True,
                                 "product_title": product.get('title', 'Unknown Product')
                             }
@@ -1098,8 +916,8 @@ def generate_firefly_images():
                         if product_images:
                             fallback_image = {
                                 "url": product_images[0],
-                                "seed": "shopify-fallback-exception",
-                                "prompt": f"Shopify product image for: {product.get('title', 'Unknown Product')}",
+                                "revised_prompt": f"Shopify product image for: {product.get('title', 'Unknown Product')}",
+                                "prompt": prompt,
                                 "is_fallback": True,
                                 "product_title": product.get('title', 'Unknown Product')
                             }
@@ -1131,5 +949,7 @@ if __name__ == '__main__':
     print(f"📊 Health check: http://localhost:{port}/health")
     print(f"🛍️  API endpoint: http://localhost:{port}/api/products")
     print(f"✨ Writer AI endpoint: http://localhost:{port}/api/writer")
+    print(f"🎨 DALL-E image generation: http://localhost:{port}/api/dalle/generate")
+    print(f"🔍 DALL-E debug: http://localhost:{port}/api/dalle/debug")
     
     app.run(host='0.0.0.0', port=port, debug=debug)

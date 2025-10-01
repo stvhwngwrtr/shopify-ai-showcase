@@ -1,6 +1,6 @@
 # 🛍️ Shopify Product Showcase with AI
 
-A powerful Flask web application that integrates with Shopify API to showcase products with AI-powered content generation using Writer AI and Adobe Firefly.
+A powerful Flask web application that integrates with Shopify API to showcase products with AI-powered content generation using Writer AI and OpenAI DALL-E.
 
 ![Python](https://img.shields.io/badge/python-v3.9+-blue.svg)
 ![Flask](https://img.shields.io/badge/flask-v2.3+-green.svg)
@@ -14,7 +14,7 @@ Transform your Shopify store into an AI-powered marketing machine! This applicat
 
 - 🛍️ **Shopify Integration**: Fetches products directly from your Shopify store
 - 🤖 **Writer AI Integration**: Generate marketing content, captions, and Instagram posts
-- 🎨 **Adobe Firefly Integration**: AI-powered image generation for products
+- 🎨 **OpenAI DALL-E Integration**: AI-powered image generation for products
 - 📝 **Product Enhancement**: Improve product descriptions with AI targeting
 - 🌍 **Multi-language Support**: Target different languages and demographics
 - 🔄 **Real-time Refresh**: Update product data on demand
@@ -28,7 +28,7 @@ Transform your Shopify store into an AI-powered marketing machine! This applicat
 - Python 3.9+
 - Shopify store with API access
 - Writer AI API account (optional)
-- Adobe Firefly API account (optional)
+- OpenAI API account (optional)
 - Docker (optional, for containerized deployment)
 
 ### 1. Clone and Setup
@@ -145,8 +145,8 @@ git push heroku main
 | `/api/products` | GET | Fetch Shopify products as JSON |
 | `/api/writer` | POST | Generate marketing content with Writer AI |
 | `/api/target` | POST | Enhance product descriptions |
-| `/api/firefly/generate` | POST | Generate product images with Adobe Firefly |
-| `/api/firefly/token` | POST | Get/refresh Firefly access token |
+| `/api/dalle/generate` | POST | Generate product images with OpenAI DALL-E |
+| `/api/dalle/debug` | GET | Test DALL-E API authentication |
 | `/health` | GET | Health check endpoint |
 
 ## 🤖 AI Features
@@ -157,7 +157,7 @@ git push heroku main
 - **Multi-language Support**: Generate content in different languages
 - **Demographic Targeting**: Tailor content for specific audiences
 
-### Adobe Firefly Integration
+### OpenAI DALL-E Integration
 - **Image Generation**: Create stunning product images from text prompts
 - **Automatic Fallback**: Uses Shopify product images when AI generation fails
 - **Batch Processing**: Generate multiple images simultaneously
@@ -172,8 +172,7 @@ git push heroku main
 | `SHOPIFY_SHOP_NAME` | Your Shopify shop name | ✅ | `superpossible` |
 | `SHOPIFY_ACCESS_TOKEN` | Your Shopify access token | ✅ | (required) |
 | `SHOPIFY_API_VERSION` | API version to use | ❌ | `2023-10` |
-| `FIREFLY_CLIENT_ID` | Adobe Firefly Client ID | ❌ | (optional) |
-| `FIREFLY_CLIENT_SECRET` | Adobe Firefly Client Secret | ❌ | (optional) |
+| `OPENAI_API_KEY` | OpenAI API Key for DALL-E | ❌ | (optional) |
 | `DEBUG` | Enable debug mode | ❌ | `False` |
 | `PORT` | Application port | ❌ | `8080` |
 
@@ -243,7 +242,7 @@ hello-world/
 1. **New Product Fields**: Update `fetch_shopify_products()` in `app.py`
 2. **UI Changes**: Modify the Flask templates in `templates/`
 3. **API Endpoints**: Add new routes to `app.py` or methods to `shopify_service.py`
-4. **AI Features**: Extend Writer AI or Firefly integrations in `app.py`
+4. **AI Features**: Extend Writer AI or DALL-E integrations in `app.py`
 
 ## Contributing
 
