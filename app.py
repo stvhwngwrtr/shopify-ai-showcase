@@ -19,6 +19,8 @@ if not os.getenv('SHOPIFY_ACCESS_TOKEN'):
     print("⚠️ Warning: SHOPIFY_ACCESS_TOKEN not set in environment variables")
 if not os.getenv('OPENAI_API_KEY'):
     print("⚠️ Warning: OPENAI_API_KEY not set in environment variables")
+if not os.getenv('INSTAGRAM_ACCESS_TOKEN'):
+    print("⚠️ Warning: INSTAGRAM_ACCESS_TOKEN not set in environment variables")
 
 # OpenAI API key management
 def get_openai_api_key():
@@ -33,6 +35,97 @@ def get_openai_api_key():
         "success": True,
         "api_key": api_key
     }
+
+# Instagram API management
+def get_instagram_access_token():
+    access_token = os.getenv('INSTAGRAM_ACCESS_TOKEN')
+    if not access_token:
+        return {
+            "success": False,
+            "error": "Instagram access token not found. Please set INSTAGRAM_ACCESS_TOKEN environment variable."
+        }
+    return {
+        "success": True,
+        "access_token": access_token
+    }
+
+def post_to_instagram(image_url, caption):
+    """Post an image to Instagram using the Instagram Basic Display API."""
+    try:
+        # Get Instagram access token
+        token_result = get_instagram_access_token()
+        if not token_result['success']:
+            return {
+                'success': False,
+                'error': token_result.get('error')
+            }
+        
+        access_token = token_result['access_token']
+        
+        # Instagram Basic Display API endpoint for creating media
+        instagram_url = f"https://graph.instagram.com/v18.0/me/media"
+        
+        # Prepare the media creation request
+        media_data = {
+            "image_url": image_url,
+            "caption": caption,
+            "access_token": access_token
+        }
+        
+        print(f"📱 Posting to Instagram: {caption[:50]}...")
+        
+        # Create the media container
+        response = requests.post(instagram_url, data=media_data, timeout=30)
+        
+        if response.status_code == 200:
+            media_response = response.json()
+            media_id = media_response.get('id')
+            
+            if media_id:
+                # Now publish the media
+                publish_url = f"https://graph.instagram.com/v18.0/me/media_publish"
+                publish_data = {
+                    "creation_id": media_id,
+                    "access_token": access_token
+                }
+                
+                publish_response = requests.post(publish_url, data=publish_data, timeout=30)
+                
+                if publish_response.status_code == 200:
+                    publish_result = publish_response.json()
+                    print(f"✅ Successfully posted to Instagram: {publish_result.get('id')}")
+                    return {
+                        'success': True,
+                        'media_id': publish_result.get('id'),
+                        'message': 'Successfully posted to Instagram!'
+                    }
+                else:
+                    error_msg = f"Failed to publish Instagram post: {publish_response.status_code} - {publish_response.text}"
+                    print(f"❌ {error_msg}")
+                    return {
+                        'success': False,
+                        'error': error_msg
+                    }
+            else:
+                return {
+                    'success': False,
+                    'error': 'Failed to create media container - no media ID returned'
+                }
+        else:
+            error_msg = f"Instagram API error: {response.status_code} - {response.text}"
+            print(f"❌ {error_msg}")
+            return {
+                'success': False,
+                'error': error_msg
+            }
+            
+    except Exception as e:
+        error_msg = f"Instagram posting error: {str(e)}"
+        print(f"❌ {error_msg}")
+        return {
+            'success': False,
+            'error': error_msg
+        }
 
 def validate_and_sanitize_prompt(prompt):
     """
@@ -940,6 +1033,108 @@ def generate_dalle_images():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
+@app.route('/api/instagram/auth-url', methods=['GET'])
+def get_instagram_auth_url():
+    """Get Instagram authorization URL for OAuth flow."""
+    try:
+        app_id = os.getenv('INSTAGRAM_APP_ID')
+        redirect_uri = f"{request.url_root}api/instagram/callback"
+        
+        if not app_id:
+            return jsonify({
+                "success": False,
+                "error": "Instagram App ID not configured"
+            })
+        
+        # Instagram Basic Display API OAuth URL
+        auth_url = f"https://api.instagram.com/oauth/authorize?client_id={app_id}&redirect_uri={redirect_uri}&scope=user_profile,user_media&response_type=code"
+        
+        return jsonify({
+            "success": True,
+            "auth_url": auth_url,
+            "message": "Instagram authorization URL generated"
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Failed to generate auth URL: {str(e)}"
+        })
+
+@app.route('/api/instagram/callback', methods=['GET'])
+def instagram_callback():
+    """Handle Instagram OAuth callback."""
+    try:
+        code = request.args.get('code')
+        if not code:
+            return jsonify({
+                "success": False,
+                "error": "No authorization code received"
+            })
+        
+        # Exchange code for access token
+        app_id = os.getenv('INSTAGRAM_APP_ID')
+        app_secret = os.getenv('INSTAGRAM_APP_SECRET')
+        redirect_uri = f"{request.url_root}api/instagram/callback"
+        
+        token_url = "https://api.instagram.com/oauth/access_token"
+        token_data = {
+            'client_id': app_id,
+            'client_secret': app_secret,
+            'grant_type': 'authorization_code',
+            'redirect_uri': redirect_uri,
+            'code': code
+        }
+        
+        response = requests.post(token_url, data=token_data, timeout=30)
+        
+        if response.status_code == 200:
+            token_response = response.json()
+            access_token = token_response.get('access_token')
+            
+            return jsonify({
+                "success": True,
+                "access_token": access_token,
+                "message": "Instagram authorization successful! You can now post to Instagram."
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": f"Failed to exchange code for token: {response.text}"
+            })
+            
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Callback error: {str(e)}"
+        })
+
+@app.route('/api/instagram/post', methods=['POST'])
+def post_to_instagram_endpoint():
+    """Post an image to Instagram."""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({"success": False, "error": "No data provided"}), 400
+        
+        image_url = data.get('image_url')
+        caption = data.get('caption', '')
+        
+        if not image_url:
+            return jsonify({"success": False, "error": "Image URL is required"}), 400
+        
+        # Post to Instagram
+        result = post_to_instagram(image_url, caption)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Instagram posting error: {str(e)}"
+        }), 500
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
     debug = os.environ.get('DEBUG', 'False').lower() == 'true'
@@ -951,5 +1146,7 @@ if __name__ == '__main__':
     print(f"✨ Writer AI endpoint: http://localhost:{port}/api/writer")
     print(f"🎨 DALL-E image generation: http://localhost:{port}/api/dalle/generate")
     print(f"🔍 DALL-E debug: http://localhost:{port}/api/dalle/debug")
+    print(f"📱 Instagram auth: http://localhost:{port}/api/instagram/auth-url")
+    print(f"📱 Instagram post: http://localhost:{port}/api/instagram/post")
     
     app.run(host='0.0.0.0', port=port, debug=debug)

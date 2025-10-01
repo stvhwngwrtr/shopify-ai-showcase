@@ -1,6 +1,6 @@
 # 🛍️ Shopify Product Showcase with AI
 
-A powerful Flask web application that integrates with Shopify API to showcase products with AI-powered content generation using Writer AI and OpenAI DALL-E.
+A powerful Flask web application that integrates with Shopify API to showcase products with AI-powered content generation using Writer AI, OpenAI DALL-E, and Instagram posting capabilities.
 
 ![Python](https://img.shields.io/badge/python-v3.9+-blue.svg)
 ![Flask](https://img.shields.io/badge/flask-v2.3+-green.svg)
@@ -15,6 +15,7 @@ Transform your Shopify store into an AI-powered marketing machine! This applicat
 - 🛍️ **Shopify Integration**: Fetches products directly from your Shopify store
 - 🤖 **Writer AI Integration**: Generate marketing content, captions, and Instagram posts
 - 🎨 **OpenAI DALL-E Integration**: AI-powered image generation for products
+- 📱 **Instagram Posting**: Post generated content directly to Instagram
 - 📝 **Product Enhancement**: Improve product descriptions with AI targeting
 - 🌍 **Multi-language Support**: Target different languages and demographics
 - 🔄 **Real-time Refresh**: Update product data on demand
@@ -29,6 +30,7 @@ Transform your Shopify store into an AI-powered marketing machine! This applicat
 - Shopify store with API access
 - Writer AI API account (optional)
 - OpenAI API account (optional)
+- Instagram Business account with API access (optional)
 - Docker (optional, for containerized deployment)
 
 ### 1. Clone and Setup
@@ -147,6 +149,9 @@ git push heroku main
 | `/api/target` | POST | Enhance product descriptions |
 | `/api/dalle/generate` | POST | Generate product images with OpenAI DALL-E |
 | `/api/dalle/debug` | GET | Test DALL-E API authentication |
+| `/api/instagram/auth-url` | GET | Get Instagram OAuth authorization URL |
+| `/api/instagram/callback` | GET | Handle Instagram OAuth callback |
+| `/api/instagram/post` | POST | Post images to Instagram |
 | `/health` | GET | Health check endpoint |
 
 ## 🤖 AI Features
@@ -163,6 +168,12 @@ git push heroku main
 - **Batch Processing**: Generate multiple images simultaneously
 - **Safety Filtering**: Built-in prompt validation and sanitization
 
+### Instagram Integration
+- **Direct Posting**: Post generated images and content directly to Instagram
+- **OAuth Authentication**: Secure Instagram API integration
+- **Business Account Support**: Works with Instagram Business accounts
+- **Media Management**: Handle image uploads and captions
+
 ## Configuration
 
 ### Environment Variables
@@ -173,6 +184,9 @@ git push heroku main
 | `SHOPIFY_ACCESS_TOKEN` | Your Shopify access token | ✅ | (required) |
 | `SHOPIFY_API_VERSION` | API version to use | ❌ | `2023-10` |
 | `OPENAI_API_KEY` | OpenAI API Key for DALL-E | ❌ | (optional) |
+| `INSTAGRAM_APP_ID` | Instagram App ID | ❌ | (optional) |
+| `INSTAGRAM_APP_SECRET` | Instagram App Secret | ❌ | (optional) |
+| `INSTAGRAM_ACCESS_TOKEN` | Instagram Access Token | ❌ | (optional) |
 | `DEBUG` | Enable debug mode | ❌ | `False` |
 | `PORT` | Application port | ❌ | `8080` |
 

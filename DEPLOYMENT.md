@@ -13,6 +13,7 @@ Before you begin, make sure you have:
 3. **Optional AI service credentials**:
    - Writer AI API key and application ID
    - OpenAI API key for DALL-E image generation
+   - Instagram Business account with API access
 
 ## Step 1: Push Your Code to GitHub
 
@@ -62,6 +63,9 @@ SHOPIFY_ACCESS_TOKEN=your_actual_access_token
 ### Optional Variables (for AI features)
 ```
 OPENAI_API_KEY=your_openai_api_key
+INSTAGRAM_APP_ID=your_instagram_app_id
+INSTAGRAM_APP_SECRET=your_instagram_app_secret
+INSTAGRAM_ACCESS_TOKEN=your_instagram_access_token
 ```
 
 ### System Variables (usually defaults are fine)
@@ -98,6 +102,9 @@ Test these endpoints:
 | `SHOPIFY_ACCESS_TOKEN` | Shopify Admin API access token | ✅ | `shpat_xxxxx` |
 | `SHOPIFY_API_VERSION` | Shopify API version | ❌ | `2023-10` |
 | `OPENAI_API_KEY` | OpenAI API key for DALL-E | ❌ | `sk-xxxxx` |
+| `INSTAGRAM_APP_ID` | Instagram App ID | ❌ | `123456789` |
+| `INSTAGRAM_APP_SECRET` | Instagram App Secret | ❌ | `abcdef123456` |
+| `INSTAGRAM_ACCESS_TOKEN` | Instagram Access Token | ❌ | `IGQVJ...` |
 | `DEBUG` | Enable debug mode | ❌ | `false` |
 | `PORT` | Application port | ❌ | `8080` |
 
