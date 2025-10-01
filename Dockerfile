@@ -22,7 +22,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Expose port 8080 (Railway default)
+# Expose port 8080 (Render default)
 EXPOSE 8080
 
 # Health check
