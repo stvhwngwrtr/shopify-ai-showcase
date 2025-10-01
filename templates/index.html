@@ -965,20 +965,6 @@
                             <!-- Individual product image results will be populated here -->
                         </div>
                         
-                        <!-- Global Image Actions -->
-                        <div class="bg-white rounded-xl p-6 shadow-sm" style="border: 1px solid var(--writer-gray-200);">
-                            <h4 class="text-lg font-semibold mb-4" style="color: var(--writer-gray-800);">
-                                📄 Export Generated Images
-                            </h4>
-                            <div class="flex flex-wrap gap-3">
-                                <button onclick="downloadAllImages()" class="btn-secondary px-4 py-2 rounded-lg text-sm font-medium">
-                                    💾 Download All Images
-                                </button>
-                                <button onclick="copyImageUrls()" class="btn-secondary px-4 py-2 rounded-lg text-sm font-medium">
-                                    📋 Copy Image URLs
-                                </button>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Instagram Post Mock -->
@@ -2421,33 +2407,6 @@
             document.body.removeChild(link);
         }
 
-        // Download all images
-        function downloadAllImages() {
-            const images = document.querySelectorAll('#imageResponsesContainer img');
-            images.forEach((img, index) => {
-                setTimeout(() => {
-                    const link = document.createElement('a');
-                    link.href = img.src;
-                    link.download = `generated_image_${index + 1}.png`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                }, index * 500); // Stagger downloads
-            });
-        }
-
-        // Copy image URLs to clipboard
-        function copyImageUrls() {
-            const images = document.querySelectorAll('#imageResponsesContainer img');
-            const urls = Array.from(images).map(img => img.src);
-            const urlText = urls.join('\n');
-            
-            navigator.clipboard.writeText(urlText).then(() => {
-                alert('Image URLs copied to clipboard!');
-            }).catch(err => {
-                console.error('Failed to copy URLs: ', err);
-            });
-        }
 
         // Clear image selection
         function clearImageSelection() {
