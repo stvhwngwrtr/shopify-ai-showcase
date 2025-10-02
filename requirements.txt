@@ -7,3 +7,4 @@ python-dotenv==1.0.0
 openai==2.0.1
 pymongo==4.6.1
 Pillow==10.2.0
+cloudinary==1.40.0
