@@ -1042,7 +1042,7 @@
                         <div class="text-center space-y-3">
                             <div class="flex gap-3 justify-center">
                                 <button id="postToInstagramBtn" onclick="postToInstagram()" class="btn-primary px-6 py-2 rounded-lg text-sm font-medium" style="display: none;">
-                                    📤 Post to Instagram
+                                    📤 Upload to Artifact Theater
                                 </button>
                                 <button onclick="closeInstagramMock()" class="btn-secondary px-6 py-2 rounded-lg text-sm font-medium">
                                     ✕ Close Preview
@@ -1519,6 +1519,7 @@
                         const stock = productElement.querySelector('.text-xs:last-of-type')?.textContent || 'N/A';
                         
                         productData.push({
+                            id: productId,  // Add the product ID
                             title: title,
                             vendor: vendor,
                             price: price,
@@ -1697,6 +1698,7 @@
                 const enhancementCard = document.createElement('div');
                 enhancementCard.className = 'bg-white rounded-xl p-6 shadow-sm';
                 enhancementCard.style.border = '1px solid var(--writer-gray-200)';
+                enhancementCard.setAttribute('data-product-id', enhancement.original_product.id || 'unknown');
                 
                 let cardHTML = `
                     <div class="flex items-center justify-between mb-4">
@@ -1801,12 +1803,34 @@
                 const vendor = infoParts[0] || 'Unknown Brand';
                 const price = infoParts[1] || 'N/A';
                 
+                // Get the product ID from the enhancement data
+                let productId = enhancementCards[enhancementIndex].getAttribute('data-product-id');
+                
+                // If productId is "unknown" or invalid, try to get it from selectedProducts or manualProductData
+                if (!productId || productId === 'unknown') {
+                    const selectedProductIds = Array.from(selectedProducts);
+                    productId = selectedProductIds.length > 0 ? selectedProductIds[0] : null;
+                    
+                    // If still no product ID, check manualProductData
+                    if (!productId && manualProductData && manualProductData.length > 0) {
+                        productId = manualProductData[0].id;
+                    }
+                }
+                
+                // Validate that we have a valid product ID
+                if (!productId) {
+                    alert('❌ Error: No product selected. Please select a product from the Products tab first.');
+                    console.error('❌ No product selected for social derivative creation');
+                    return;
+                }
+                
                 const productData = {
-                        title: productTitle,
+                    id: productId,  // Add the product ID
+                    title: productTitle,
                     vendor: vendor,
                     price: price,
-                        stock: 'Active'
-                    };
+                    stock: 'Active'
+                };
                 
                 // Switch to the Social Derivative (Writer) tab
                 switchTab('writer');
@@ -1943,6 +1967,7 @@
                 const productCard = document.createElement('div');
                 productCard.className = 'bg-white rounded-xl p-6 shadow-sm';
                 productCard.style.border = '1px solid var(--writer-gray-200)';
+                // Note: Product ID now comes from selectedProducts (Products tab selection), not from Writer response
                 
                 let cardHTML = `
                     <div class="flex items-center justify-between mb-4">
@@ -2075,6 +2100,10 @@
                 }
                 
                 productCard.innerHTML = cardHTML;
+                
+                // Set the product ID attribute for the card
+                productCard.setAttribute('data-product-id', response.product.id || 'unknown');
+                
                 container.appendChild(productCard);
             });
             
@@ -2537,6 +2566,24 @@
                 const productTitle = productCards[postIndex].querySelector('h4').textContent.replace('📦 ', '');
                 const productInfo = productCards[postIndex].querySelector('.text-sm').textContent;
                 
+                // Get the product ID from the selected products (Products tab selection)
+                // Use the first selected product ID since we're generating images for the Writer response
+                const selectedProductIds = Array.from(selectedProducts);
+                let productId = selectedProductIds.length > 0 ? selectedProductIds[0] : null;
+                
+                // If no product ID from selectedProducts, check manualProductData (from enhancement results)
+                if (!productId && manualProductData && manualProductData.length > 0) {
+                    productId = manualProductData[0].id;
+                    console.log('🔍 Using product ID from manualProductData:', productId);
+                }
+                
+                // Validate that we have a valid product ID
+                if (!productId) {
+                    alert('❌ Error: No product selected. Please select a product from the Products tab first.');
+                    console.error('❌ No product selected. Selected products:', selectedProductIds, 'Manual product data:', manualProductData);
+                    return;
+                }
+                
                 // Extract vendor and price from the product info
                 const infoParts = productInfo.split(' • ');
                 const vendor = infoParts[0] || 'Unknown Brand';
@@ -2568,11 +2615,13 @@
                 }
                 
                 const productData = {
+                    id: productId,  // Add the product ID
                     title: productTitle,
                     vendor: vendor,
                     price: price,
                     prompts: prompts,
                     products: [{
+                        id: productId,  // Add the product ID to products array too
                         title: productTitle,
                         vendor: vendor,
                         price: price,
@@ -2791,8 +2840,7 @@
                                                     data-image-id="${imageId}"
                                                     data-image-url="${image.url}"
                                                     data-prompt="${promptResult.prompt}"
-                                                    data-product-title="${result.product.title}"
-                                                    data-product-index="${index}">
+                                                    data-product-title="${result.product.title}">
                                                 📱 Create Instagram Post
                                             </button>
                                             <button class="download-btn flex-1 text-xs px-3 py-2 bg-purple-50 text-purple-600 rounded hover:bg-purple-100 transition-colors"
@@ -2844,9 +2892,35 @@
                 const imageUrl = event.target.getAttribute('data-image-url');
                 const prompt = event.target.getAttribute('data-prompt');
                 const productTitle = event.target.getAttribute('data-product-title');
-                const productIndex = parseInt(event.target.getAttribute('data-product-index'));
                 
-                selectImageForInstagram(imageId, imageUrl, prompt, productTitle, productIndex);
+                // Get the product ID from the selected products (Products tab selection)
+                // Use the first selected product ID since we're posting images for the Writer response
+                const selectedProductIds = Array.from(selectedProducts);
+                let productId = selectedProductIds.length > 0 ? selectedProductIds[0] : null;
+                
+                // If no product ID from selectedProducts, check manualProductData (from enhancement results)
+                if (!productId && manualProductData && manualProductData.length > 0) {
+                    productId = manualProductData[0].id;
+                    console.log('🔍 Using product ID from manualProductData:', productId);
+                }
+                
+                // Validate that we have a selected product
+                if (!productId) {
+                    alert('❌ Error: No product selected. Please select a product from the Products tab first.');
+                    console.error('❌ No product selected. Selected products:', selectedProductIds, 'Manual product data:', manualProductData);
+                    return;
+                }
+                
+                // Debug: Log all attributes
+                console.log('🔍 Button clicked - All attributes:');
+                console.log('  imageId:', imageId);
+                console.log('  imageUrl:', imageUrl);
+                console.log('  prompt:', prompt);
+                console.log('  productTitle:', productTitle);
+                console.log('  productId:', productId);
+                console.log('  productId type:', typeof productId);
+                
+                selectImageForInstagram(imageId, imageUrl, prompt, productTitle, productId);
             } else if (event.target.classList.contains('download-btn')) {
                 const imageUrl = event.target.getAttribute('data-image-url');
                 const filename = event.target.getAttribute('data-filename');
@@ -2877,9 +2951,22 @@
         }
 
         // Instagram Post Mock Functions
-        function selectImageForInstagram(imageId, imageUrl, prompt, productTitle, productIndex) {
+        function getProductIdForIndex(productIndex) {
+            // Convert selectedProducts Set to Array and get the product ID at the given index
+            const productIds = Array.from(selectedProducts);
+            return productIds[productIndex] || null;
+        }
+
+        function selectImageForInstagram(imageId, imageUrl, prompt, productTitle, productId) {
+            // Debug: Log function parameters
+            console.log('🔍 selectImageForInstagram called with:', {
+                imageId, imageUrl, prompt, productTitle, productId
+            });
+            console.log('🔍 Selected products:', Array.from(selectedProducts));
+            
             // Find the Instagram caption and hashtags from the specific Social Derivative result card
-            const captionData = findInstagramCaptionAndHashtagsForProductIndex(productIndex);
+            // For now, we'll use a simple caption since we don't have the product index anymore
+            const captionData = null; // We'll generate a simple caption instead
             
             // Update Instagram mock with selected image and caption
             document.getElementById('instagramImage').src = imageUrl;
@@ -2895,7 +2982,7 @@
                 }
                 captionElement.textContent = fullCaption;
             } else {
-                captionElement.textContent = `Check out this amazing ${productTitle}! ✨`;
+                captionElement.textContent = `Check out this amazing ${productTitle}! ✨ #${productTitle.replace(/\s+/g, '')} #SuperPossible #Shopify`;
             }
             
             // Update username and timestamp (always use SuperPossible)
@@ -2904,11 +2991,40 @@
             document.getElementById('instagramTimestamp').textContent = 'Just now';
             document.getElementById('instagramLikes').textContent = Math.floor(Math.random() * 5000 + 500);
             
+            // If productId is null or undefined, get it from selected products or manualProductData
+            if (!productId) {
+                const selectedProductIds = Array.from(selectedProducts);
+                productId = selectedProductIds.length > 0 ? selectedProductIds[0] : null;
+                
+                // If still no product ID, check manualProductData (from enhancement results)
+                if (!productId && manualProductData && manualProductData.length > 0) {
+                    productId = manualProductData[0].id;
+                    console.log('🔍 Using product ID from manualProductData:', productId);
+                } else if (productId) {
+                    console.log('🔍 Using product ID from selected products:', productId);
+                }
+            }
+            
+            console.log('🔍 Using product ID:', productId);
+            console.log('🔍 Product ID type:', typeof productId);
+            console.log('🔍 Product ID value:', productId);
+            
+            // Validate product ID before proceeding
+            if (!productId || productId === 'null' || productId === 'undefined') {
+                console.error('❌ Invalid product ID received:', productId);
+                alert('❌ Error: No product selected. Please select a product from the Products tab first.');
+                return;
+            }
+            
             // Store current Instagram data for posting
             currentInstagramData = {
                 image_url: imageUrl,
-                caption: captionElement.textContent
+                caption: captionElement.textContent,
+                product_id: productId,
+                comment: ''
             };
+            
+            console.log('🔍 Current Instagram data set:', currentInstagramData);
             
             // Show Instagram mock
             document.getElementById('instagramMock').style.display = 'block';
@@ -3059,40 +3175,87 @@
                 return;
             }
 
+            // Debug: Log current Instagram data
+            console.log('🔍 Current Instagram Data:', currentInstagramData);
+            console.log('🔍 Selected Products:', Array.from(selectedProducts));
+
             const postBtn = document.getElementById('postToInstagramBtn');
             const originalText = postBtn.innerHTML;
             
             // Show loading state
-            postBtn.innerHTML = '⏳ Posting...';
+            postBtn.innerHTML = '⏳ Uploading...';
             postBtn.disabled = true;
 
-            fetch('/api/instagram/post', {
+            // Validate required data
+            if (!currentInstagramData.product_id || currentInstagramData.product_id === 'null' || currentInstagramData.product_id === 'undefined') {
+                alert('❌ Error: Product ID is missing or invalid. Please select a product first.');
+                console.error('❌ Invalid product_id:', currentInstagramData.product_id);
+                postBtn.innerHTML = originalText;
+                postBtn.disabled = false;
+                return;
+            }
+
+            if (!currentInstagramData.image_url || currentInstagramData.image_url === 'null' || currentInstagramData.image_url === 'undefined') {
+                alert('❌ Error: Image URL is missing or invalid.');
+                console.error('❌ Invalid image_url:', currentInstagramData.image_url);
+                postBtn.innerHTML = originalText;
+                postBtn.disabled = false;
+                return;
+            }
+
+            // Record the Instagram post to MongoDB (testing only - no actual Instagram posting)
+            const recordData = {
+                product_id: currentInstagramData.product_id,
+                image_url: currentInstagramData.image_url,
+                caption: currentInstagramData.caption,
+                comment: currentInstagramData.comment || ''
+            };
+
+            console.log('📤 Sending record data:', recordData);
+
+            // Record to MongoDB only (no Instagram posting)
+            fetch('/api/instagram/record', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(currentInstagramData)
+                body: JSON.stringify(recordData)
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('✅ Successfully posted to Instagram!');
+            .then(response => {
+                console.log('📡 Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(recordResult => {
+                console.log('📊 Record result:', recordResult);
+                if (recordResult.success) {
+                    console.log('✅ Instagram post recorded to MongoDB:', recordResult.session_id);
+                    console.log('📊 Record data:', recordResult.data);
+                    
+                    alert(`✅ Successfully uploaded to Artifact Theater!\n\nSession ID: ${recordResult.session_id}\nProduct: ${recordResult.product_data.name}\nCategory: ${recordResult.product_data.category}`);
                     
                     // Update button to show success
-                    postBtn.innerHTML = '✅ Posted!';
+                    postBtn.innerHTML = '✅ Uploaded!';
                     setTimeout(() => {
                         postBtn.innerHTML = originalText;
                         postBtn.disabled = false;
                     }, 3000);
                 } else {
-                    alert('❌ Error posting to Instagram: ' + data.error);
+                    alert('❌ Error uploading to Artifact Theater: ' + recordResult.error);
                     postBtn.innerHTML = originalText;
                     postBtn.disabled = false;
                 }
             })
             .catch(error => {
-                console.error('Error posting to Instagram:', error);
-                alert('❌ Error posting to Instagram. Please try again.');
+                console.error('❌ Error recording to MongoDB:', error);
+                console.error('❌ Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                });
+                alert(`❌ Error uploading to Artifact Theater: ${error.message}\n\nPlease check the console for more details.`);
                 postBtn.innerHTML = originalText;
                 postBtn.disabled = false;
             });

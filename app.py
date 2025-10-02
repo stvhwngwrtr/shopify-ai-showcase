@@ -1,5 +1,7 @@
 from flask import Flask, render_template, jsonify, request, send_from_directory
 from shopify_service import get_shopify_service
+from mongodb_service import get_mongodb_service, create_instagram_preview_image
+from cloud_storage_service import get_cloud_storage_service
 import json
 import os
 import requests
@@ -21,6 +23,8 @@ if not os.getenv('OPENAI_API_KEY'):
     print("⚠️ Warning: OPENAI_API_KEY not set in environment variables")
 if not os.getenv('INSTAGRAM_ACCESS_TOKEN'):
     print("⚠️ Warning: INSTAGRAM_ACCESS_TOKEN not set in environment variables")
+if not os.getenv('MONGODB_CONNECTION_STRING'):
+    print("⚠️ Warning: MONGODB_CONNECTION_STRING not set in environment variables")
 
 # OpenAI API key management
 def get_openai_api_key():
@@ -204,24 +208,45 @@ def validate_and_sanitize_prompt(prompt):
     
     return True, sanitized, "Safe"
 
-def make_dalle_api_call(prompt, api_key, size="1024x1024", quality="standard", n=1):
-    """Make a DALL-E API call to generate images."""
+def make_dalle_api_call(prompt, api_key, size="1024x1024", quality="standard", n=1, reference_image_url=None):
+    """Make a DALL-E API call to generate images with optional reference image."""
     try:
         from openai import OpenAI
         
         client = OpenAI(api_key=api_key)
         
-        response = client.images.generate(
-            model="dall-e-3",
-            prompt=prompt,
-            size=size,
-            quality=quality,
-            n=n
-        )
+        # If reference image is provided, use image variation or editing
+        if reference_image_url:
+            # Download the reference image
+            import requests
+            response = requests.get(reference_image_url, timeout=30)
+            response.raise_for_status()
+            
+            # Create image variation based on reference image
+            # Note: DALL-E 3 doesn't support direct image-to-image, but we can use it as inspiration
+            enhanced_prompt = f"Create a product showcase image inspired by this reference: {prompt}. Style: professional product photography, clean background, high quality, commercial photography style."
+            
+            dalle_response = client.images.generate(
+                model="dall-e-3",
+                prompt=enhanced_prompt,
+                size=size,
+                quality=quality,
+                n=n
+            )
+        else:
+            # Standard text-to-image generation
+            dalle_response = client.images.generate(
+                model="dall-e-3",
+                prompt=prompt,
+                size=size,
+                quality=quality,
+                n=n
+            )
         
         return {
             'success': True,
-            'response': response
+            'response': dalle_response,
+            'used_reference': bool(reference_image_url)
         }
         
     except Exception as e:
@@ -239,6 +264,11 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 def serve_logo():
     """Serve the Writer logo SVG file."""
     return send_from_directory('.', 'logo.svg', mimetype='image/svg+xml')
+
+@app.route('/test-mongodb')
+def test_mongodb_page():
+    """Serve the MongoDB test page."""
+    return send_from_directory('.', 'test_mongodb_frontend.html', mimetype='text/html')
 
 def parse_writer_response(raw_response):
     """Parse the Writer AI response into structured sections."""
@@ -525,6 +555,7 @@ def send_to_writer():
                     
                     # Add product info to the response
                     parsed_response['product'] = {
+                        'id': product.get('id'),  # Add the product ID
                         'title': product.get('title', 'Unknown Product'),
                         'vendor': product.get('vendor', 'Unknown Brand'),
                         'price': product.get('price', 'N/A'),
@@ -543,6 +574,7 @@ def send_to_writer():
                     
                     all_responses.append({
                         'product': {
+                            'id': product.get('id'),  # Add the product ID
                             'title': product.get('title', 'Unknown Product'),
                             'vendor': product.get('vendor', 'Unknown Brand'),
                             'price': product.get('price', 'N/A'),
@@ -709,6 +741,7 @@ Target Demographic: {target_demographic.replace('-', ' ').title()}
                     
                     # Add product info to the response
                     enhancement_data['original_product'] = {
+                        'id': product.get('id'),  # Add the product ID
                         'title': product.get('title', 'Unknown Product'),
                         'vendor': product.get('vendor', 'Unknown Brand'),
                         'price': product.get('price', 'N/A'),
@@ -730,6 +763,7 @@ Target Demographic: {target_demographic.replace('-', ' ').title()}
                     
                     all_enhancements.append({
                         'original_product': {
+                            'id': product.get('id'),  # Add the product ID
                             'title': product.get('title', 'Unknown Product'),
                             'vendor': product.get('vendor', 'Unknown Brand'),
                             'price': product.get('price', 'N/A'),
@@ -744,6 +778,7 @@ Target Demographic: {target_demographic.replace('-', ' ').title()}
             except requests.exceptions.Timeout:
                 all_enhancements.append({
                     'original_product': {
+                        'id': product.get('id'),  # Add the product ID
                         'title': product.get('title', 'Unknown Product'),
                         'vendor': product.get('vendor', 'Unknown Brand'),
                         'price': product.get('price', 'N/A'),
@@ -757,6 +792,7 @@ Target Demographic: {target_demographic.replace('-', ' ').title()}
             except Exception as e:
                 all_enhancements.append({
                     'original_product': {
+                        'id': product.get('id'),  # Add the product ID
                         'title': product.get('title', 'Unknown Product'),
                         'vendor': product.get('vendor', 'Unknown Brand'),
                         'price': product.get('price', 'N/A'),
@@ -902,9 +938,11 @@ def generate_dalle_images():
         api_key = data.get('api_key') or os.getenv('OPENAI_API_KEY')
         prompts = data.get('prompts', [])
         products = data.get('products', [])  # Optional: product data for fallback images
+        reference_image_url = data.get('reference_image_url')  # Optional: reference image URL
         
         print(f"🎨 Generate request - API key present: {bool(api_key)}")
         print(f"🎨 Products for fallback: {len(products)} products provided")
+        print(f"🎨 Reference image: {reference_image_url or 'None'}")
         
         if not api_key:
             return jsonify({
@@ -939,8 +977,8 @@ def generate_dalle_images():
                 prompt_images = []
                 api_error_for_prompt = None
                 
-                # Make DALL-E API call
-                api_result = make_dalle_api_call(actual_prompt, api_key, size="1024x1024", quality="standard", n=1)
+                # Make DALL-E API call with optional reference image
+                api_result = make_dalle_api_call(actual_prompt, api_key, size="1024x1024", quality="standard", n=1, reference_image_url=reference_image_url)
                 
                 if api_result['success']:
                     response = api_result['response']
@@ -1029,6 +1067,98 @@ def generate_dalle_images():
             "success": True, 
             "results": results
         })
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+@app.route('/api/dalle/generate-with-product', methods=['POST'])
+def generate_dalle_with_product():
+    """Generate DALL-E images using a Shopify product as reference."""
+    try:
+        data = request.get_json() or {}
+        api_key = data.get('api_key') or os.getenv('OPENAI_API_KEY')
+        product_id = data.get('product_id')
+        prompt = data.get('prompt', '')
+        
+        if not api_key:
+            return jsonify({
+                "success": False, 
+                "error": "API key is required. Provide api_key in request or set OPENAI_API_KEY environment variable."
+            })
+        
+        if not product_id:
+            return jsonify({"success": False, "error": "Product ID is required"})
+        
+        # Fetch product details from Shopify
+        try:
+            product_id_int = int(product_id)
+        except ValueError:
+            return jsonify({"success": False, "error": "Invalid product ID format"})
+        
+        shopify_service = get_shopify_service()
+        product_result = shopify_service.get_product(product_id_int)
+        
+        if not product_result.get("success"):
+            return jsonify({
+                "success": False,
+                "error": f"Failed to fetch product: {product_result.get('error', 'Unknown error')}"
+            })
+        
+        product_data = product_result["product"]
+        product_images = product_data.get("images", [])
+        
+        if not product_images:
+            return jsonify({
+                "success": False,
+                "error": "Product has no images to use as reference"
+            })
+        
+        # Use the first product image as reference
+        first_image = product_images[0]
+        # Handle both string URLs and image objects
+        if isinstance(first_image, dict):
+            reference_image_url = first_image.get('src', first_image.get('url', ''))
+        else:
+            reference_image_url = first_image
+        
+        product_name = product_data.get("title", "product")
+        
+        # Create enhanced prompt if none provided
+        if not prompt:
+            prompt = f"Professional product photography of {product_name}, clean background, high quality commercial style"
+        
+        print(f"🎨 Generating with product reference: {product_name}")
+        print(f"🎨 Reference image: {reference_image_url}")
+        print(f"🎨 Prompt: {prompt}")
+        
+        # Generate image with reference
+        api_result = make_dalle_api_call(prompt, api_key, size="1024x1024", quality="standard", n=1, reference_image_url=reference_image_url)
+        
+        if api_result['success']:
+            response = api_result['response']
+            
+            if response.data and len(response.data) > 0:
+                generated_image = response.data[0]
+                
+                return jsonify({
+                    "success": True,
+                    "image_url": generated_image.url,
+                    "revised_prompt": generated_image.revised_prompt if hasattr(generated_image, 'revised_prompt') else prompt,
+                    "product_data": {
+                        "id": product_id,
+                        "name": product_data.get("title"),
+                        "category": product_data.get("product_type"),
+                        "reference_image": reference_image_url
+                    },
+                    "used_reference": api_result.get('used_reference', False)
+                })
+            else:
+                return jsonify({"success": False, "error": "No images generated"})
+        else:
+            return jsonify({
+                "success": False,
+                "error": api_result.get('error', 'DALL-E generation failed')
+            })
         
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
@@ -1135,12 +1265,157 @@ def post_to_instagram_endpoint():
             "error": f"Instagram posting error: {str(e)}"
         }), 500
 
+@app.route('/api/instagram/record', methods=['POST'])
+def record_instagram_post():
+    """Record an Instagram post to MongoDB with product data."""
+    try:
+        data = request.get_json()
+        
+        # Debug logging
+        print(f"🔍 Received data: {data}")
+        print(f"🔍 Data type: {type(data)}")
+        
+        if not data:
+            print("❌ No data provided")
+            return jsonify({"success": False, "error": "No data provided"}), 400
+        
+        # Extract required data
+        product_id = data.get('product_id')
+        image_url = data.get('image_url')
+        caption = data.get('caption', '')
+        comment = data.get('comment', '')
+        
+        print(f"🔍 Extracted - product_id: {product_id}, image_url: {image_url}")
+        print(f"🔍 Extracted - caption: {caption}, comment: {comment}")
+        
+        if not product_id:
+            print("❌ Product ID is missing")
+            return jsonify({"success": False, "error": "Product ID is required"}), 400
+        
+        if not image_url:
+            print("❌ Image URL is missing")
+            return jsonify({"success": False, "error": "Image URL is required"}), 400
+        
+        # Get MongoDB service
+        mongodb_service = get_mongodb_service()
+        
+        # Get Shopify service to fetch product details
+        shopify_service = get_shopify_service()
+        
+        try:
+            # Convert product_id to integer (Shopify expects integer IDs)
+            try:
+                product_id_int = int(product_id)
+            except (ValueError, TypeError) as e:
+                print(f"❌ Invalid product ID format: {product_id}")
+                return jsonify({
+                    "success": False,
+                    "error": f"Invalid product ID format: {product_id}"
+                }), 400
+            
+            # Fetch product details from Shopify
+            product_result = shopify_service.get_product(product_id_int)
+            
+            if not product_result.get("success"):
+                return jsonify({
+                    "success": False,
+                    "error": f"Failed to fetch product details: {product_result.get('error', 'Unknown error')}"
+                }), 400
+            
+            product_data = product_result["product"]
+            
+            # Extract product information
+            product_name = product_data.get("title", "Unknown Product")
+            product_category = product_data.get("product_type", "General")
+            product_url = f"https://{os.getenv('SHOPIFY_SHOP_NAME', 'shop')}.myshopify.com/products/{product_data.get('handle', '')}"
+            
+            # Create Instagram post mockup with caption overlay
+            mockup_result = create_instagram_preview_image(image_url, caption)
+            
+            if mockup_result["success"]:
+                # Upload mockup to cloud storage
+                cloud_storage = get_cloud_storage_service()
+                upload_result = cloud_storage.upload_mockup(
+                    mockup_result['image_data'], 
+                    str(product_id), 
+                    caption
+                )
+                
+                if upload_result["success"]:
+                    asset_urls = [upload_result['public_url']]
+                    print(f"✅ Created and uploaded Instagram mockup: {upload_result['public_url']}")
+                else:
+                    # Fallback to base64 data URL if cloud upload fails
+                    mockup_data_url = f"data:image/{mockup_result['format']};base64,{mockup_result['image_data']}"
+                    asset_urls = [mockup_data_url]
+                    print(f"⚠️ Cloud upload failed, using base64 fallback: {upload_result.get('error')}")
+            else:
+                # Fallback to original image URL
+                asset_urls = [image_url]
+                print(f"⚠️ Failed to create mockup: {mockup_result.get('error')}")
+            
+            # Create MongoDB record
+            record_result = mongodb_service.create_instagram_post_record(
+                product_id=str(product_id),
+                product_url=product_url,
+                asset_urls=asset_urls,
+                product_name=product_name,
+                product_category=product_category,
+                caption=caption,
+                user_name="AI Showcase"
+            )
+            
+            if record_result["success"]:
+                print(f"✅ Instagram post recorded successfully: {record_result['session_id']}")
+                response_data = {
+                    "success": True,
+                    "message": "Instagram post recorded successfully",
+                    "session_id": record_result["session_id"],
+                    "record_id": record_result["record_id"],
+                    "asset_url": asset_urls[0] if asset_urls else None,
+                    "mockup_created": mockup_result["success"] if mockup_result else False,
+                    "product_data": {
+                        "name": product_name,
+                        "category": product_category,
+                        "url": product_url
+                    }
+                }
+                
+                # Add cloud storage info if available
+                if mockup_result["success"] and 'upload_result' in locals():
+                    response_data["cloud_storage"] = {
+                        "uploaded": upload_result["success"],
+                        "public_url": upload_result.get("public_url"),
+                        "cloudinary_id": upload_result.get("cloudinary_id")
+                    }
+                
+                return jsonify(response_data)
+            else:
+                return jsonify({
+                    "success": False,
+                    "error": f"Failed to record Instagram post: {record_result.get('error')}"
+                }), 500
+                
+        finally:
+            # Clean up services
+            shopify_service.close()
+            mongodb_service.disconnect()
+        
+    except Exception as e:
+        error_msg = f"Instagram recording error: {str(e)}"
+        print(f"❌ {error_msg}")
+        return jsonify({
+            "success": False,
+            "error": error_msg
+        }), 500
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
     debug = os.environ.get('DEBUG', 'False').lower() == 'true'
     
     print(f"🚀 Starting Shopify Product Showcase on port {port}")
     print(f"🌐 Access the app at: http://localhost:{port}")
+    print(f"🧪 MongoDB test page: http://localhost:{port}/test-mongodb")
     print(f"📊 Health check: http://localhost:{port}/health")
     print(f"🛍️  API endpoint: http://localhost:{port}/api/products")
     print(f"✨ Writer AI endpoint: http://localhost:{port}/api/writer")
@@ -1148,5 +1423,6 @@ if __name__ == '__main__':
     print(f"🔍 DALL-E debug: http://localhost:{port}/api/dalle/debug")
     print(f"📱 Instagram auth: http://localhost:{port}/api/instagram/auth-url")
     print(f"📱 Instagram post: http://localhost:{port}/api/instagram/post")
+    print(f"📱 Instagram record: http://localhost:{port}/api/instagram/record")
     
     app.run(host='0.0.0.0', port=port, debug=debug)
