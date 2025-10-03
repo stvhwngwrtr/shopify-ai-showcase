@@ -293,26 +293,40 @@ def create_instagram_preview_image(image_url: str, caption: str = "", width: int
             caption_font = ImageFont.load_default()
             small_font = ImageFont.load_default()
         
-        # HEADER SECTION (above image)
+        # HEADER SECTION (above image) - Instagram style
         header_y = 10
         
-        # Profile picture (circle) - more realistic size
+        # Profile picture - Instagram logo style
         profile_size = 32
         profile_x = 12
         profile_y = header_y + 14
         
-        # Draw profile circle with gradient effect
+        # Draw Instagram-style profile circle (purple with white camera)
         draw.ellipse([profile_x, profile_y, profile_x + profile_size, profile_y + profile_size], 
-                    fill=(240, 240, 240), outline=(200, 200, 200))
+                    fill=(138, 58, 185), outline=(138, 58, 185))  # Instagram purple
         
-        # Add inner circle for profile picture effect
-        inner_size = 28
-        inner_x = profile_x + 2
-        inner_y = profile_y + 2
-        draw.ellipse([inner_x, inner_y, inner_x + inner_size, inner_y + inner_size], 
-                    fill=(220, 220, 220))
+        # Add white camera icon in center
+        camera_size = 16
+        camera_x = profile_x + (profile_size - camera_size) // 2
+        camera_y = profile_y + (profile_size - camera_size) // 2
         
-        # Profile name - positioned better
+        # Camera body (rectangle)
+        draw.rectangle([camera_x + 2, camera_y + 4, camera_x + camera_size - 2, camera_y + camera_size - 2], 
+                      fill=(255, 255, 255))
+        
+        # Camera lens (circle)
+        lens_size = 8
+        lens_x = camera_x + (camera_size - lens_size) // 2
+        lens_y = camera_y + 6
+        draw.ellipse([lens_x, lens_y, lens_x + lens_size, lens_y + lens_size], 
+                    fill=(138, 58, 185))
+        
+        # Camera flash (small rectangle)
+        flash_x = camera_x + camera_size - 6
+        flash_y = camera_y + 2
+        draw.rectangle([flash_x, flash_y, flash_x + 2, flash_y + 2], fill=(255, 255, 255))
+        
+        # Profile name - bold styling
         profile_name_x = profile_x + profile_size + 12
         profile_name_y = header_y + 20
         draw.text((profile_name_x, profile_name_y), "SuperPossible", fill=(0, 0, 0), font=header_font)
@@ -331,41 +345,43 @@ def create_instagram_preview_image(image_url: str, caption: str = "", width: int
         # INTERACTION BAR (below image)
         interaction_y = header_height + image_height + 12
         
-        # Heart icon - more realistic Instagram heart
+        # Heart icon - outline style (Instagram style)
         heart_x = 12
         heart_y = interaction_y
-        # Draw heart shape (simplified)
         heart_size = 24
-        draw.ellipse([heart_x, heart_y, heart_x + heart_size, heart_y + heart_size], fill=(255, 0, 0))
-        # Add white outline
-        draw.ellipse([heart_x + 1, heart_y + 1, heart_x + heart_size - 1, heart_y + heart_size - 1], 
-                    fill=(255, 255, 255), outline=(255, 0, 0))
+        # Heart outline (simplified as circle outline)
+        draw.ellipse([heart_x, heart_y, heart_x + heart_size, heart_y + heart_size], 
+                    fill=(255, 255, 255), outline=(0, 0, 0), width=2)
         
-        # Comment icon - better speech bubble
+        # Comment icon - outline speech bubble
         comment_x = heart_x + 35
         comment_y = interaction_y + 2
-        # Speech bubble body
-        draw.ellipse([comment_x, comment_y, comment_x + 20, comment_y + 20], fill=(0, 0, 0))
-        draw.ellipse([comment_x + 1, comment_y + 1, comment_x + 19, comment_y + 19], fill=(255, 255, 255))
-        # Speech bubble tail
-        draw.polygon([(comment_x + 8, comment_y + 20), (comment_x + 12, comment_y + 20), (comment_x + 10, comment_y + 25)], fill=(0, 0, 0))
+        # Speech bubble outline
+        draw.ellipse([comment_x, comment_y, comment_x + 20, comment_y + 20], 
+                    fill=(255, 255, 255), outline=(0, 0, 0), width=2)
+        # Speech bubble tail outline
+        draw.polygon([(comment_x + 8, comment_y + 20), (comment_x + 12, comment_y + 20), (comment_x + 10, comment_y + 25)], 
+                    fill=(255, 255, 255), outline=(0, 0, 0))
         
-        # Share icon - better paper plane
+        # Share icon - outline paper plane
         share_x = comment_x + 35
         share_y = interaction_y + 2
-        # Paper plane body
-        draw.polygon([(share_x, share_y + 8), (share_x + 20, share_y + 8), (share_x + 10, share_y + 18)], fill=(0, 0, 0))
-        # Paper plane wing
-        draw.polygon([(share_x + 5, share_y + 8), (share_x + 15, share_y + 8), (share_x + 10, share_y + 3)], fill=(0, 0, 0))
+        # Paper plane outline
+        draw.polygon([(share_x, share_y + 8), (share_x + 20, share_y + 8), (share_x + 10, share_y + 18)], 
+                    fill=(255, 255, 255), outline=(0, 0, 0))
+        # Paper plane wing outline
+        draw.polygon([(share_x + 5, share_y + 8), (share_x + 15, share_y + 8), (share_x + 10, share_y + 3)], 
+                    fill=(255, 255, 255), outline=(0, 0, 0))
         
-        # Bookmark icon - right side
+        # Bookmark icon - outline style (right side)
         bookmark_x = post_width - 30
         bookmark_y = interaction_y + 2
-        # Bookmark body
-        draw.rectangle([bookmark_x, bookmark_y, bookmark_x + 18, bookmark_y + 20], fill=(0, 0, 0))
-        draw.rectangle([bookmark_x + 1, bookmark_y + 1, bookmark_x + 17, bookmark_y + 19], fill=(255, 255, 255))
-        # Bookmark notch
-        draw.polygon([(bookmark_x + 6, bookmark_y + 20), (bookmark_x + 12, bookmark_y + 20), (bookmark_x + 9, bookmark_y + 25)], fill=(0, 0, 0))
+        # Bookmark outline
+        draw.rectangle([bookmark_x, bookmark_y, bookmark_x + 18, bookmark_y + 20], 
+                       fill=(255, 255, 255), outline=(0, 0, 0), width=2)
+        # Bookmark notch outline
+        draw.polygon([(bookmark_x + 6, bookmark_y + 20), (bookmark_x + 12, bookmark_y + 20), (bookmark_x + 9, bookmark_y + 25)], 
+                    fill=(255, 255, 255), outline=(0, 0, 0))
         
         # Likes count - better positioning
         likes_y = interaction_y + 30
@@ -375,9 +391,12 @@ def create_instagram_preview_image(image_url: str, caption: str = "", width: int
         caption_y = likes_y + 20
         
         if caption and caption.strip():
+            # Format caption with bold "SuperPossible" at the start
+            formatted_caption = f"SuperPossible {caption}"
+            
             # Wrap caption text for mobile
             max_chars_per_line = 45  # Shorter for mobile
-            wrapped_lines = textwrap.wrap(caption, width=max_chars_per_line)
+            wrapped_lines = textwrap.wrap(formatted_caption, width=max_chars_per_line)
             
             # Limit to 4 lines maximum for mobile
             if len(wrapped_lines) > 4:
@@ -388,7 +407,26 @@ def create_instagram_preview_image(image_url: str, caption: str = "", width: int
             line_height = 16
             for i, line in enumerate(wrapped_lines):
                 line_y = caption_y + (i * line_height)
-                draw.text((12, line_y), line, fill=(0, 0, 0), font=caption_font)
+                
+                # Check if line starts with "SuperPossible" and make it bold
+                if line.startswith("SuperPossible"):
+                    # Split the line to handle bold "SuperPossible" separately
+                    parts = line.split(" ", 1)
+                    if len(parts) == 2:
+                        # Draw "SuperPossible" in bold (using header_font)
+                        draw.text((12, line_y), parts[0], fill=(0, 0, 0), font=header_font)
+                        # Draw the rest of the line
+                        if parts[1]:
+                            # Get width of "SuperPossible" to position the rest
+                            bbox = draw.textbbox((0, 0), parts[0], font=header_font)
+                            superpossible_width = bbox[2] - bbox[0]
+                            draw.text((12 + superpossible_width + 2, line_y), parts[1], fill=(0, 0, 0), font=caption_font)
+                    else:
+                        # Just "SuperPossible" on its own line
+                        draw.text((12, line_y), line, fill=(0, 0, 0), font=header_font)
+                else:
+                    # Regular line
+                    draw.text((12, line_y), line, fill=(0, 0, 0), font=caption_font)
             
             caption_height = len(wrapped_lines) * line_height
         else:
