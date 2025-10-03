@@ -212,14 +212,14 @@ def get_mongodb_service() -> MongoDBService:
     return MongoDBService(connection_string)
 
 
-def create_instagram_preview_image(image_url: str, caption: str = "", width: int = 1080, height: int = 1350) -> Dict[str, Any]:
-    """Create a complete Instagram post mockup with UI elements.
+def create_instagram_preview_image(image_url: str, caption: str = "", width: int = 375, height: int = 600) -> Dict[str, Any]:
+    """Create a mobile-optimized Instagram post mockup with realistic UI elements.
     
     Args:
         image_url: URL of the source image
         caption: Caption text to display
-        width: Width of the output image
-        height: Height of the output image (taller for full post)
+        width: Width of the output image (mobile width)
+        height: Height of the output image (mobile height)
         
     Returns:
         Dict with success status and base64 encoded image data
@@ -236,24 +236,28 @@ def create_instagram_preview_image(image_url: str, caption: str = "", width: int
         if image.mode != 'RGB':
             image = image.convert('RGB')
         
-        # Create Instagram post dimensions (square image + UI elements below)
+        # Mobile Instagram dimensions (portrait aspect ratio)
         post_width = width
-        image_size = width  # Square image
-        ui_height = height - image_size
+        post_height = height
+        
+        # Calculate sections
+        header_height = 60
+        image_height = 375  # Square image for mobile
+        ui_height = post_height - header_height - image_height
         
         # Create the main post image
-        instagram_post = Image.new('RGB', (post_width, height), (255, 255, 255))
+        instagram_post = Image.new('RGB', (post_width, post_height), (255, 255, 255))
         
         # Resize and center the main image
-        image.thumbnail((image_size, image_size), Image.Resampling.LANCZOS)
+        image.thumbnail((image_height, image_height), Image.Resampling.LANCZOS)
         img_width, img_height = image.size
-        x = (image_size - img_width) // 2
-        y = (image_size - img_height) // 2
+        x = (image_height - img_width) // 2
+        y = header_height + (image_height - img_height) // 2
         
-        # Paste the image at the top
+        # Paste the image below the header
         instagram_post.paste(image, (x, y))
         
-        # Create UI elements below the image
+        # Create UI elements
         draw = ImageDraw.Draw(instagram_post)
         
         # Try to load fonts
@@ -268,11 +272,13 @@ def create_instagram_preview_image(image_url: str, caption: str = "", width: int
             
             header_font = None
             caption_font = None
+            small_font = None
             
             for font_path in font_paths:
                 try:
-                    header_font = ImageFont.truetype(font_path, 16)
-                    caption_font = ImageFont.truetype(font_path, 14)
+                    header_font = ImageFont.truetype(font_path, 14)
+                    caption_font = ImageFont.truetype(font_path, 12)
+                    small_font = ImageFont.truetype(font_path, 10)
                     break
                 except:
                     continue
@@ -280,99 +286,121 @@ def create_instagram_preview_image(image_url: str, caption: str = "", width: int
             if header_font is None:
                 header_font = ImageFont.load_default()
                 caption_font = ImageFont.load_default()
+                small_font = ImageFont.load_default()
                 
         except:
             header_font = ImageFont.load_default()
             caption_font = ImageFont.load_default()
+            small_font = ImageFont.load_default()
         
-        # Draw Instagram UI elements
-        ui_start_y = image_size
+        # HEADER SECTION (above image)
+        header_y = 10
         
-        # Header area (profile info)
-        header_height = 60
-        header_y = ui_start_y + 10
+        # Profile picture (circle) - more realistic size
+        profile_size = 32
+        profile_x = 12
+        profile_y = header_y + 14
         
-        # Profile picture (circle)
-        profile_size = 40
-        profile_x = 20
-        profile_y = header_y + 5
-        
-        # Draw profile circle (light gray)
+        # Draw profile circle with gradient effect
         draw.ellipse([profile_x, profile_y, profile_x + profile_size, profile_y + profile_size], 
-                    fill=(200, 200, 200), outline=(150, 150, 150))
+                    fill=(240, 240, 240), outline=(200, 200, 200))
         
-        # Profile name
-        profile_name_x = profile_x + profile_size + 15
-        profile_name_y = header_y + 15
+        # Add inner circle for profile picture effect
+        inner_size = 28
+        inner_x = profile_x + 2
+        inner_y = profile_y + 2
+        draw.ellipse([inner_x, inner_y, inner_x + inner_size, inner_y + inner_size], 
+                    fill=(220, 220, 220))
+        
+        # Profile name - positioned better
+        profile_name_x = profile_x + profile_size + 12
+        profile_name_y = header_y + 20
         draw.text((profile_name_x, profile_name_y), "SuperPossible", fill=(0, 0, 0), font=header_font)
         
-        # Sponsored label
-        sponsored_y = profile_name_y + 20
-        draw.text((profile_name_x, sponsored_y), "Sponsored", fill=(100, 100, 100), font=caption_font)
+        # Sponsored label - smaller and positioned better
+        sponsored_y = profile_name_y + 16
+        draw.text((profile_name_x, sponsored_y), "Sponsored", fill=(120, 120, 120), font=small_font)
         
-        # Three dots menu
-        dots_x = post_width - 30
-        dots_y = header_y + 20
+        # Three dots menu - better positioning
+        dots_x = post_width - 25
+        dots_y = header_y + 25
         for i in range(3):
-            dot_y = dots_y + (i * 5)
-            draw.ellipse([dots_x, dot_y, dots_x + 3, dot_y + 3], fill=(100, 100, 100))
+            dot_y = dots_y + (i * 4)
+            draw.ellipse([dots_x, dot_y, dots_x + 2, dot_y + 2], fill=(120, 120, 120))
         
-        # Interaction bar
-        interaction_y = ui_start_y + header_height + 20
+        # INTERACTION BAR (below image)
+        interaction_y = header_height + image_height + 12
         
-        # Heart icon (red heart)
-        heart_x = 20
+        # Heart icon - more realistic Instagram heart
+        heart_x = 12
         heart_y = interaction_y
-        draw.ellipse([heart_x, heart_y, heart_x + 20, heart_y + 20], fill=(255, 0, 0))
+        # Draw heart shape (simplified)
+        heart_size = 24
+        draw.ellipse([heart_x, heart_y, heart_x + heart_size, heart_y + heart_size], fill=(255, 0, 0))
+        # Add white outline
+        draw.ellipse([heart_x + 1, heart_y + 1, heart_x + heart_size - 1, heart_y + heart_size - 1], 
+                    fill=(255, 255, 255), outline=(255, 0, 0))
         
-        # Comment icon (speech bubble)
+        # Comment icon - better speech bubble
         comment_x = heart_x + 35
         comment_y = interaction_y + 2
-        draw.ellipse([comment_x, comment_y, comment_x + 16, comment_y + 16], fill=(0, 0, 0))
-        draw.ellipse([comment_x + 2, comment_y + 2, comment_x + 14, comment_y + 14], fill=(255, 255, 255))
+        # Speech bubble body
+        draw.ellipse([comment_x, comment_y, comment_x + 20, comment_y + 20], fill=(0, 0, 0))
+        draw.ellipse([comment_x + 1, comment_y + 1, comment_x + 19, comment_y + 19], fill=(255, 255, 255))
+        # Speech bubble tail
+        draw.polygon([(comment_x + 8, comment_y + 20), (comment_x + 12, comment_y + 20), (comment_x + 10, comment_y + 25)], fill=(0, 0, 0))
         
-        # Share icon (paper plane)
+        # Share icon - better paper plane
         share_x = comment_x + 35
         share_y = interaction_y + 2
-        # Simple triangle for paper plane
-        draw.polygon([(share_x, share_y), (share_x + 15, share_y + 7), (share_x, share_y + 14)], fill=(0, 0, 0))
+        # Paper plane body
+        draw.polygon([(share_x, share_y + 8), (share_x + 20, share_y + 8), (share_x + 10, share_y + 18)], fill=(0, 0, 0))
+        # Paper plane wing
+        draw.polygon([(share_x + 5, share_y + 8), (share_x + 15, share_y + 8), (share_x + 10, share_y + 3)], fill=(0, 0, 0))
         
-        # Bookmark icon (right side)
+        # Bookmark icon - right side
         bookmark_x = post_width - 30
         bookmark_y = interaction_y + 2
-        draw.rectangle([bookmark_x, bookmark_y, bookmark_x + 16, bookmark_y + 20], fill=(0, 0, 0))
-        draw.rectangle([bookmark_x + 2, bookmark_y + 2, bookmark_x + 14, bookmark_y + 18], fill=(255, 255, 255))
+        # Bookmark body
+        draw.rectangle([bookmark_x, bookmark_y, bookmark_x + 18, bookmark_y + 20], fill=(0, 0, 0))
+        draw.rectangle([bookmark_x + 1, bookmark_y + 1, bookmark_x + 17, bookmark_y + 19], fill=(255, 255, 255))
+        # Bookmark notch
+        draw.polygon([(bookmark_x + 6, bookmark_y + 20), (bookmark_x + 12, bookmark_y + 20), (bookmark_x + 9, bookmark_y + 25)], fill=(0, 0, 0))
         
-        # Likes count
+        # Likes count - better positioning
         likes_y = interaction_y + 30
-        draw.text((20, likes_y), "4975 likes", fill=(0, 0, 0), font=caption_font)
+        draw.text((12, likes_y), "4,455 likes", fill=(0, 0, 0), font=caption_font)
         
-        # Caption area
-        caption_y = likes_y + 25
+        # Caption area - better spacing
+        caption_y = likes_y + 20
         
         if caption and caption.strip():
-            # Wrap caption text
-            max_chars_per_line = 60
+            # Wrap caption text for mobile
+            max_chars_per_line = 45  # Shorter for mobile
             wrapped_lines = textwrap.wrap(caption, width=max_chars_per_line)
             
-            # Limit to 6 lines maximum
-            if len(wrapped_lines) > 6:
-                wrapped_lines = wrapped_lines[:6]
+            # Limit to 4 lines maximum for mobile
+            if len(wrapped_lines) > 4:
+                wrapped_lines = wrapped_lines[:4]
                 wrapped_lines[-1] = wrapped_lines[-1][:-3] + "..."
             
-            # Draw caption lines
-            line_height = 18
+            # Draw caption lines with better spacing
+            line_height = 16
             for i, line in enumerate(wrapped_lines):
                 line_y = caption_y + (i * line_height)
-                draw.text((20, line_y), line, fill=(0, 0, 0), font=caption_font)
+                draw.text((12, line_y), line, fill=(0, 0, 0), font=caption_font)
+            
+            caption_height = len(wrapped_lines) * line_height
+        else:
+            caption_height = 0
         
-        # Timestamp
-        timestamp_y = caption_y + (len(wrapped_lines) if caption else 0) * 18 + 15
-        draw.text((20, timestamp_y), "Just now", fill=(150, 150, 150), font=caption_font)
+        # Timestamp - better positioning
+        timestamp_y = caption_y + caption_height + 8
+        draw.text((12, timestamp_y), "Just now", fill=(150, 150, 150), font=small_font)
         
         # Convert to base64 for easy storage/transmission
         img_buffer = io.BytesIO()
-        instagram_post.save(img_buffer, format='JPEG', quality=85)
+        instagram_post.save(img_buffer, format='JPEG', quality=90)
         img_buffer.seek(0)
         
         # Encode as base64
@@ -382,7 +410,7 @@ def create_instagram_preview_image(image_url: str, caption: str = "", width: int
             "success": True,
             "image_data": img_base64,
             "format": "jpeg",
-            "dimensions": f"{post_width}x{height}",
+            "dimensions": f"{post_width}x{post_height}",
             "has_caption": bool(caption and caption.strip())
         }
         
