@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Writer AI - Shopify Product Showcase</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -3125,6 +3126,54 @@
         // Instagram posting functionality
         let currentInstagramData = null;
 
+        function captureInstagramMockup() {
+            return new Promise((resolve, reject) => {
+                try {
+                    const mockupElement = document.querySelector('#instagramMock .max-w-md.mx-auto.bg-white.rounded-xl.shadow-lg.overflow-hidden');
+                    
+                    if (!mockupElement) {
+                        reject(new Error('Instagram mockup element not found'));
+                        return;
+                    }
+
+                    // Use html2canvas to capture the element
+                    if (typeof html2canvas === 'undefined') {
+                        // Fallback: try to load html2canvas dynamically
+                        const script = document.createElement('script');
+                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                        script.onload = () => {
+                            captureWithHtml2Canvas(mockupElement, resolve, reject);
+                        };
+                        script.onerror = () => {
+                            reject(new Error('Failed to load html2canvas library'));
+                        };
+                        document.head.appendChild(script);
+                    } else {
+                        captureWithHtml2Canvas(mockupElement, resolve, reject);
+                    }
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+
+        function captureWithHtml2Canvas(element, resolve, reject) {
+            html2canvas(element, {
+                backgroundColor: '#ffffff',
+                scale: 2, // Higher quality
+                useCORS: true,
+                allowTaint: true,
+                width: element.offsetWidth,
+                height: element.offsetHeight
+            }).then(canvas => {
+                // Convert canvas to base64
+                const imageData = canvas.toDataURL('image/jpeg', 0.9);
+                resolve(imageData);
+            }).catch(error => {
+                reject(error);
+            });
+        }
+
         function checkInstagramAuth() {
             // Check if Instagram credentials are configured
             // This will be called when the preview opens
@@ -3203,59 +3252,55 @@
                 return;
             }
 
-            // Record the Instagram post to MongoDB (testing only - no actual Instagram posting)
-            const recordData = {
-                product_id: currentInstagramData.product_id,
-                image_url: currentInstagramData.image_url,
-                caption: currentInstagramData.caption,
-                comment: currentInstagramData.comment || ''
-            };
+            // Capture the Instagram mockup as an image
+            captureInstagramMockup().then(mockupImageData => {
+                // Record the Instagram post to MongoDB with the captured mockup
+                const recordData = {
+                    product_id: currentInstagramData.product_id,
+                    image_url: currentInstagramData.image_url,
+                    caption: currentInstagramData.caption,
+                    comment: currentInstagramData.comment || '',
+                    mockup_image_data: mockupImageData // Include the captured mockup
+                };
 
-            console.log('📤 Sending record data:', recordData);
+                console.log('📤 Sending record data:', recordData);
 
-            // Record to MongoDB only (no Instagram posting)
-            fetch('/api/instagram/record', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(recordData)
-            })
-            .then(response => {
-                console.log('📡 Response status:', response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                return response.json();
-            })
-            .then(recordResult => {
-                console.log('📊 Record result:', recordResult);
-                if (recordResult.success) {
-                    console.log('✅ Instagram post recorded to MongoDB:', recordResult.session_id);
-                    console.log('📊 Record data:', recordResult.data);
+                // Record to MongoDB only (no Instagram posting)
+                fetch('/api/instagram/record', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(recordData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('📤 Record response:', data);
                     
-                    alert(`✅ Successfully uploaded to Artifact Theater!\n\nSession ID: ${recordResult.session_id}\nProduct: ${recordResult.product_data.name}\nCategory: ${recordResult.product_data.category}`);
-                    
-                    // Update button to show success
-                    postBtn.innerHTML = '✅ Uploaded!';
-                    setTimeout(() => {
-                        postBtn.innerHTML = originalText;
-                        postBtn.disabled = false;
-                    }, 3000);
-                } else {
-                    alert('❌ Error uploading to Artifact Theater: ' + recordResult.error);
+                    if (data.success) {
+                        postBtn.innerHTML = '✅ Uploaded!';
+                        postBtn.style.backgroundColor = '#10b981';
+                        alert('Successfully uploaded to Artifact Theater!');
+                        
+                        // Reset button after 3 seconds
+                        setTimeout(() => {
+                            postBtn.innerHTML = originalText;
+                            postBtn.style.backgroundColor = '';
+                            postBtn.disabled = false;
+                        }, 3000);
+                    } else {
+                        throw new Error(data.error || 'Failed to upload to Artifact Theater');
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Error uploading to Artifact Theater:', error);
+                    alert(`❌ Error uploading to Artifact Theater: ${error.message}`);
                     postBtn.innerHTML = originalText;
                     postBtn.disabled = false;
-                }
-            })
-            .catch(error => {
-                console.error('❌ Error recording to MongoDB:', error);
-                console.error('❌ Error details:', {
-                    message: error.message,
-                    stack: error.stack,
-                    name: error.name
                 });
-                alert(`❌ Error uploading to Artifact Theater: ${error.message}\n\nPlease check the console for more details.`);
+            }).catch(error => {
+                console.error('❌ Error capturing Instagram mockup:', error);
+                alert(`❌ Error capturing Instagram mockup: ${error.message}`);
                 postBtn.innerHTML = originalText;
                 postBtn.disabled = false;
             });

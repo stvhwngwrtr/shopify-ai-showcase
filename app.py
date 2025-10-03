@@ -1284,9 +1284,11 @@ def record_instagram_post():
         image_url = data.get('image_url')
         caption = data.get('caption', '')
         comment = data.get('comment', '')
+        mockup_image_data = data.get('mockup_image_data')  # Frontend-captured mockup
         
         print(f"🔍 Extracted - product_id: {product_id}, image_url: {image_url}")
         print(f"🔍 Extracted - caption: {caption}, comment: {comment}")
+        print(f"🔍 Extracted - mockup_image_data: {'Present' if mockup_image_data else 'Not provided'}")
         
         if not product_id:
             print("❌ Product ID is missing")
@@ -1329,30 +1331,58 @@ def record_instagram_post():
             product_category = product_data.get("product_type", "General")
             product_url = f"https://{os.getenv('SHOPIFY_SHOP_NAME', 'shop')}.myshopify.com/products/{product_data.get('handle', '')}"
             
-            # Create Instagram post mockup with caption overlay
-            mockup_result = create_instagram_preview_image(image_url, caption)
-            
-            if mockup_result["success"]:
-                # Upload mockup to cloud storage
+            # Use frontend-captured mockup if available, otherwise generate one
+            if mockup_image_data:
+                print("📱 Using frontend-captured Instagram mockup")
+                # Extract base64 data from data URL
+                if mockup_image_data.startswith('data:image'):
+                    base64_data = mockup_image_data.split(',', 1)[1]
+                else:
+                    base64_data = mockup_image_data
+                
+                # Upload frontend mockup to cloud storage
                 cloud_storage = get_cloud_storage_service()
                 upload_result = cloud_storage.upload_mockup(
-                    mockup_result['image_data'], 
+                    base64_data, 
                     str(product_id), 
                     caption
                 )
                 
                 if upload_result["success"]:
                     asset_urls = [upload_result['public_url']]
-                    print(f"✅ Created and uploaded Instagram mockup: {upload_result['public_url']}")
+                    print(f"✅ Uploaded frontend-captured mockup: {upload_result['public_url']}")
+                    mockup_result = {"success": True, "format": "jpeg"}
                 else:
                     # Fallback to base64 data URL if cloud upload fails
-                    mockup_data_url = f"data:image/{mockup_result['format']};base64,{mockup_result['image_data']}"
-                    asset_urls = [mockup_data_url]
+                    asset_urls = [mockup_image_data]
                     print(f"⚠️ Cloud upload failed, using base64 fallback: {upload_result.get('error')}")
+                    mockup_result = {"success": True, "format": "jpeg"}
             else:
-                # Fallback to original image URL
-                asset_urls = [image_url]
-                print(f"⚠️ Failed to create mockup: {mockup_result.get('error')}")
+                print("🎨 Generating new Instagram mockup (fallback)")
+                # Create Instagram post mockup with caption overlay (fallback)
+                mockup_result = create_instagram_preview_image(image_url, caption)
+                
+                if mockup_result["success"]:
+                    # Upload mockup to cloud storage
+                    cloud_storage = get_cloud_storage_service()
+                    upload_result = cloud_storage.upload_mockup(
+                        mockup_result['image_data'], 
+                        str(product_id), 
+                        caption
+                    )
+                    
+                    if upload_result["success"]:
+                        asset_urls = [upload_result['public_url']]
+                        print(f"✅ Created and uploaded Instagram mockup: {upload_result['public_url']}")
+                    else:
+                        # Fallback to base64 data URL if cloud upload fails
+                        mockup_data_url = f"data:image/{mockup_result['format']};base64,{mockup_result['image_data']}"
+                        asset_urls = [mockup_data_url]
+                        print(f"⚠️ Cloud upload failed, using base64 fallback: {upload_result.get('error')}")
+                else:
+                    # Fallback to original image URL
+                    asset_urls = [image_url]
+                    print(f"⚠️ Failed to create mockup: {mockup_result.get('error')}")
             
             # Create MongoDB record
             record_result = mongodb_service.create_instagram_post_record(
