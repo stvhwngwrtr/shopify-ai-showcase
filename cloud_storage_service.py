@@ -57,8 +57,8 @@ class CloudStorageService:
                 image_bytes = base64.b64decode(image_data)
                 print(f"📊 Decoded base64 data: {len(image_bytes)} bytes")
             
-            # Create filename
-            filename = f"instagram_mockup_{session_id}.jpg"
+            # Create filename without extension (Cloudinary will add it)
+            filename = f"instagram_mockup_{session_id}"
             print(f"📁 Uploading as: mockups/{filename}")
             
             # Upload to Cloudinary
