@@ -54,7 +54,7 @@ class ScreenshotService:
                 "block_ads": True,
                 "block_cookie_banners": True,
                 "block_banners_by_heuristics": False,
-                "delay": 5,  # Wait 5 seconds for images to load
+                "delay": 8,  # Wait 8 seconds for DALL-E images to load
                 "timeout": 30
             }
             
@@ -117,7 +117,7 @@ class ScreenshotService:
                 "device_scale_factor": 2,
                 "format": "jpg",
                 "image_quality": 90,
-                "delay": 5,
+                "delay": 8,  # Wait 8 seconds for DALL-E images to load
                 "timeout": 30
             }
             

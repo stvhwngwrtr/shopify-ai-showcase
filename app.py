@@ -1340,8 +1340,9 @@ def record_instagram_post():
             if screenshot_service.use_external_service and screenshot_service.api_key:
                 print("📸 Attempting screenshot capture via HTML...")
                 
-                # URL encode the image URL for the proxy endpoint
-                encoded_image_url = requests.utils.quote(image_url, safe='')
+                # For DALL-E images, use the original URL directly in screenshots
+                # (proxy fails with expired URLs, but screenshot service can access them)
+                screenshot_image_url = image_url
                 
                 # Generate the HTML for the Instagram preview
                 likes = str(random.randint(500, 5000))
@@ -1466,7 +1467,7 @@ def record_instagram_post():
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
             </button>
         </div>
-        <img src="/api/proxy-image?url={encoded_image_url}" class="post-image" alt="{product_name}" crossorigin="anonymous">
+        <img src="{screenshot_image_url}" class="post-image" alt="{product_name}" crossorigin="anonymous">
         <div class="post-actions">
             <button class="action-btn">
                 <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
