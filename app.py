@@ -1463,7 +1463,7 @@ def record_instagram_post():
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
             </button>
         </div>
-        <img src="{image_url}" class="post-image" alt="{product_name}" crossorigin="anonymous">
+        <img src="/api/proxy-image?url={encoded_image_url}" class="post-image" alt="{product_name}" crossorigin="anonymous">
         <div class="post-actions">
             <button class="action-btn">
                 <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -1617,6 +1617,9 @@ def instagram_preview(session_id):
         if not image_url:
             return "Image URL required", 400
         
+        # URL encode the image URL for the proxy endpoint
+        encoded_image_url = requests.utils.quote(image_url, safe='')
+        
         # Create a standalone Instagram mockup HTML
         html = f'''
 <!DOCTYPE html>
@@ -1740,7 +1743,7 @@ def instagram_preview(session_id):
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
             </button>
         </div>
-        <img src="{image_url}" class="post-image" alt="{product_name}" crossorigin="anonymous">
+        <img src="/api/proxy-image?url={encoded_image_url}" class="post-image" alt="{product_name}" crossorigin="anonymous">
         <div class="post-actions">
             <button class="action-btn">
                 <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
