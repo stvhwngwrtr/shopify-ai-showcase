@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Writer AI - Shopify Product Showcase</title>
+    <title>Writer AI - Content Generation Platform</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -237,15 +237,15 @@
         <div class="text-center mb-12">
             <div class="inline-flex items-center mb-6">
                 <div class="writer-gradient rounded-xl mr-4 flex items-center justify-center shadow-lg px-3 py-2">
-                    <img src="/logo.svg" alt="Writer Logo" class="h-6 brightness-0 invert">
+                    <img src="/writer.webp" alt="Writer AI Logo" class="h-8">
                 </div>
                 <div class="text-left">
                     <span class="text-2xl font-bold" style="color: var(--writer-gray-900);">Writer</span>
                     <span class="text-sm font-medium ml-2 px-2 py-1 rounded-full" style="background-color: var(--writer-gray-100); color: var(--writer-gray-600);">AI</span>
                 </div>
             </div>
-            <h1 class="text-4xl font-bold mb-4" style="color: var(--writer-gray-900);">Product Showcase</h1>
-            <p class="text-lg" style="color: var(--writer-gray-600);">Transform your Shopify products with AI-powered content generation using Writer and OpenAI DALL-E. Enhance product descriptions with targeted messaging, create engaging Instagram posts with Writer AI, and generate professional product images - all optimized for your specific audience and language preferences.</p>
+            <h1 class="text-4xl font-bold mb-4" style="color: var(--writer-gray-900);">Writer AI Content Studio</h1>
+            <p class="text-lg" style="color: var(--writer-gray-600);">Transform your products with AI-powered content generation using Writer AI and OpenAI DALL-E. Enhance product descriptions with targeted messaging, create engaging social media posts, and generate professional product images - all optimized for your specific audience and language preferences.</p>
         </div>
 
         <!-- Tab Navigation -->
@@ -1070,11 +1070,8 @@
                                 <button id="postToInstagramBtn" onclick="postToInstagram()" class="btn-primary px-6 py-2 rounded-lg text-sm font-medium" style="display: none;">
                                     📤 Upload to Artifact Theater
                                 </button>
-                                <button id="debugCaptureBtn" onclick="debugCapture()" class="btn-secondary px-4 py-2 rounded-lg text-sm font-medium" style="display: none;">
-                                    🔍 Debug Capture
-                                </button>
-                                <button onclick="closeInstagramMock()" class="btn-secondary px-6 py-2 rounded-lg text-sm font-medium">
-                                    ✕ Close Preview
+                                <button onclick="refreshPage()" class="btn-secondary px-6 py-2 rounded-lg text-sm font-medium">
+                                    🔄 Start Over
                                 </button>
                             </div>
                             <div id="instagramAuthSection" class="text-center" style="display: none;">
@@ -2634,6 +2631,13 @@
                     }, 5000);
                 }
             }, 100);
+        }
+
+        // Refresh the page to start the process over
+        function refreshPage() {
+            if (confirm('Are you sure you want to start over? This will refresh the page and clear all your progress.')) {
+                window.location.reload();
+            }
         }
 
         // Toggle edit mode for editable content

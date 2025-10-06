@@ -262,6 +262,11 @@ def make_dalle_api_call(prompt, api_key, size="1024x1024", quality="standard", n
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
+@app.route('/writer.webp')
+def serve_writer_logo():
+    """Serve the Writer AI logo WebP file."""
+    return send_from_directory('static', 'writer.webp', mimetype='image/webp')
+
 @app.route('/logo.svg')
 def serve_logo():
     """Serve the Writer logo SVG file."""
