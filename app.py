@@ -1487,6 +1487,20 @@ def record_instagram_post():
         </div>
         <div class="post-time">Just now</div>
     </div>
+    <script>
+        // Ensure image is loaded before screenshot
+        document.addEventListener('DOMContentLoaded', function() {{
+            const img = document.querySelector('.post-image');
+            if (img) {{
+                img.onload = function() {{
+                    console.log('Image loaded successfully');
+                }};
+                img.onerror = function() {{
+                    console.log('Image failed to load');
+                }};
+            }}
+        }});
+    </script>
 </body>
 </html>'''
                 

@@ -54,7 +54,7 @@ class ScreenshotService:
                 "block_ads": True,
                 "block_cookie_banners": True,
                 "block_banners_by_heuristics": False,
-                "delay": 2,  # Wait 2 seconds for images to load
+                "delay": 5,  # Wait 5 seconds for images to load
                 "timeout": 30
             }
             
@@ -117,7 +117,7 @@ class ScreenshotService:
                 "device_scale_factor": 2,
                 "format": "jpg",
                 "image_quality": 90,
-                "delay": 1,
+                "delay": 5,
                 "timeout": 30
             }
             
