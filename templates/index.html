@@ -2600,6 +2600,42 @@
             document.getElementById('imageResults').style.display = 'none';
         }
 
+        // Go back to social derivative tab when DALL-E prompt is rejected for safety
+        function goBackToSocialDerivative() {
+            // Switch to the social derivative tab
+            const socialDerivativeTab = document.querySelector('[data-tab="social-derivative"]');
+            if (socialDerivativeTab) {
+                socialDerivativeTab.click();
+            }
+            
+            // Show a message to the user
+            setTimeout(() => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg text-sm text-orange-700';
+                messageDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                        </svg>
+                        <span>Please select a different prompt. The previous prompt was rejected for safety reasons.</span>
+                    </div>
+                `;
+                
+                // Insert message at the top of the social derivative tab content
+                const socialContent = document.querySelector('#social-derivative-tab-content .flex-1');
+                if (socialContent) {
+                    socialContent.insertBefore(messageDiv, socialContent.firstChild);
+                    
+                    // Remove the message after 5 seconds
+                    setTimeout(() => {
+                        if (messageDiv.parentNode) {
+                            messageDiv.parentNode.removeChild(messageDiv);
+                        }
+                    }, 5000);
+                }
+            }, 100);
+        }
+
         // Toggle edit mode for editable content
         function toggleEditMode(elementId) {
             const element = document.getElementById(elementId);
@@ -2966,11 +3002,25 @@
                         `;
                         
                         if (promptResult.error && !promptResult.used_fallback) {
-                            cardHTML += `
-                                <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                                    ❌ Error: ${promptResult.error}
-                                </div>
-                            `;
+                            // Check if this is a safety rejection
+                            if (promptResult.error.includes('rejected for safety') || promptResult.error.includes('safety')) {
+                                cardHTML += `
+                                    <div class="p-3 bg-orange-50 border border-orange-200 rounded-lg text-sm text-orange-700">
+                                        ⚠️ Safety Rejection: ${promptResult.error}
+                                        <div class="mt-2">
+                                            <button onclick="goBackToSocialDerivative()" class="px-3 py-1 bg-orange-100 hover:bg-orange-200 text-orange-800 rounded text-xs font-medium transition-colors">
+                                                ← Back to Social Derivative
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            } else {
+                                cardHTML += `
+                                    <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                                        ❌ Error: ${promptResult.error}
+                                    </div>
+                                `;
+                            }
                         } else if (promptResult.used_fallback || promptResult.fallback_info) {
                             const fallbackMessage = promptResult.fallback_info || "AI image generation unavailable. Using Shopify product image as fallback.";
                             cardHTML += `
