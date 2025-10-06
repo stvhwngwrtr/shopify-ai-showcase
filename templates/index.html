@@ -2596,11 +2596,8 @@
 
         // Go back to social derivative tab when DALL-E prompt is rejected for safety
         function goBackToSocialDerivative() {
-            // Switch to the social derivative tab
-            const socialDerivativeTab = document.querySelector('[data-tab="social-derivative"]');
-            if (socialDerivativeTab) {
-                socialDerivativeTab.click();
-            }
+            // Switch to the social derivative tab (which is the writer tab)
+            handleTabClick('writer');
             
             // Show a message to the user
             setTimeout(() => {
@@ -2615,10 +2612,10 @@
                     </div>
                 `;
                 
-                // Insert message at the top of the social derivative tab content
-                const socialContent = document.querySelector('#social-derivative-tab-content .flex-1');
-                if (socialContent) {
-                    socialContent.insertBefore(messageDiv, socialContent.firstChild);
+                // Insert message at the top of the writer tab content
+                const writerContent = document.querySelector('#writer-tab-content .flex-1');
+                if (writerContent) {
+                    writerContent.insertBefore(messageDiv, writerContent.firstChild);
                     
                     // Remove the message after 5 seconds
                     setTimeout(() => {
