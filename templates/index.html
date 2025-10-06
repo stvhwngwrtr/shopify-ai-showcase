@@ -1067,7 +1067,7 @@
                         <!-- Instagram Post Actions -->
                         <div class="text-center space-y-3">
                             <div class="flex gap-3 justify-center">
-                                <button id="postToInstagramBtn" onclick="postToInstagram()" class="btn-primary px-6 py-2 rounded-lg text-sm font-medium" style="display: none;">
+                                <button id="postToInstagramBtn" onclick="postToInstagram()" class="btn-primary px-6 py-2 rounded-lg text-sm font-medium">
                                     📤 Upload to Artifact Theater
                                 </button>
                                 <button onclick="refreshPage()" class="btn-secondary px-6 py-2 rounded-lg text-sm font-medium">
@@ -3478,19 +3478,16 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Show post button if auth URL can be generated (means app is configured)
-                        document.getElementById('postToInstagramBtn').style.display = 'inline-block';
+                        // Instagram auth is available
                         document.getElementById('instagramAuthSection').style.display = 'none';
                     } else {
                         // Show auth section if not configured
-                        document.getElementById('postToInstagramBtn').style.display = 'none';
                         document.getElementById('instagramAuthSection').style.display = 'block';
                     }
                 })
                 .catch(error => {
                     console.error('Error checking Instagram auth:', error);
                     // Show auth section on error
-                    document.getElementById('postToInstagramBtn').style.display = 'none';
                     document.getElementById('instagramAuthSection').style.display = 'block';
                 });
         }
