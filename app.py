@@ -1340,9 +1340,29 @@ def record_instagram_post():
             if screenshot_service.use_external_service and screenshot_service.api_key:
                 print("📸 Attempting screenshot capture via HTML...")
                 
-                # For DALL-E images, use the original URL directly in screenshots
-                # (proxy fails with expired URLs, but screenshot service can access them)
-                screenshot_image_url = image_url
+                # URL encode the image URL for the proxy endpoint
+                encoded_image_url = requests.utils.quote(image_url, safe='')
+                
+                # Convert DALL-E image to data URL for reliable screenshot capture
+                try:
+                    print("🔄 Converting DALL-E image to data URL...")
+                    data_url_response = requests.post('http://localhost:8080/api/image-to-dataurl', 
+                                                    json={'image_url': image_url}, 
+                                                    timeout=30)
+                    if data_url_response.status_code == 200:
+                        data_url_data = data_url_response.json()
+                        if data_url_data.get('success'):
+                            screenshot_image_url = data_url_data['data_url']
+                            print(f"✅ Converted to data URL: {len(screenshot_image_url)} chars")
+                        else:
+                            print("⚠️ Data URL conversion failed, using direct URL")
+                            screenshot_image_url = image_url
+                    else:
+                        print("⚠️ Data URL conversion failed, using direct URL")
+                        screenshot_image_url = image_url
+                except Exception as e:
+                    print(f"⚠️ Data URL conversion error: {e}, using direct URL")
+                    screenshot_image_url = image_url
                 
                 # Generate the HTML for the Instagram preview
                 likes = str(random.randint(500, 5000))
@@ -1493,12 +1513,25 @@ def record_instagram_post():
         document.addEventListener('DOMContentLoaded', function() {{
             const img = document.querySelector('.post-image');
             if (img) {{
+                // Force image to load
+                img.style.display = 'block';
+                img.style.visibility = 'visible';
+                
                 img.onload = function() {{
                     console.log('Image loaded successfully');
+                    // Add a small delay to ensure rendering is complete
+                    setTimeout(() => {{
+                        console.log('Image rendering complete');
+                    }}, 1000);
                 }};
                 img.onerror = function() {{
                     console.log('Image failed to load');
                 }};
+                
+                // Trigger load if already cached
+                if (img.complete) {{
+                    img.onload();
+                }}
             }}
         }});
     </script>
@@ -1791,6 +1824,43 @@ def instagram_preview(session_id):
     except Exception as e:
         print(f"❌ Error generating preview: {e}")
         return str(e), 500
+
+@app.route('/api/image-to-dataurl', methods=['POST'])
+def image_to_dataurl():
+    """Convert an image URL to a data URL for reliable screenshot capture."""
+    try:
+        data = request.get_json()
+        image_url = data.get('image_url')
+        
+        if not image_url:
+            return jsonify({'error': 'image_url is required'}), 400
+        
+        # Fetch the image
+        response = requests.get(image_url, timeout=30)
+        response.raise_for_status()
+        
+        # Convert to base64 data URL
+        import base64
+        from urllib.parse import urlparse
+        
+        # Determine content type
+        content_type = response.headers.get('content-type', 'image/png')
+        
+        # Create data URL
+        image_base64 = base64.b64encode(response.content).decode('utf-8')
+        data_url = f"data:{content_type};base64,{image_base64}"
+        
+        return jsonify({
+            'success': True,
+            'data_url': data_url,
+            'size': len(response.content)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @app.route('/api/proxy-image', methods=['GET'])
 def proxy_image():
