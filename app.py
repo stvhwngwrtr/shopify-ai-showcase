@@ -1340,6 +1340,9 @@ def record_instagram_post():
             if screenshot_service.use_external_service and screenshot_service.api_key:
                 print("📸 Attempting screenshot capture via HTML...")
                 
+                # URL encode the image URL for the proxy endpoint
+                encoded_image_url = requests.utils.quote(image_url, safe='')
+                
                 # Generate the HTML for the Instagram preview
                 likes = str(random.randint(500, 5000))
                 preview_html = f'''<!DOCTYPE html>
