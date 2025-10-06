@@ -133,6 +133,31 @@
             background-color: white;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
+        
+        .tab-button.completed {
+            background-color: #10b981 !important;
+            color: white !important;
+        }
+        
+        .tab-button.completed::after {
+            content: " ✓";
+            font-weight: bold;
+        }
+        
+        .tab-button.locked {
+            background-color: #f3f4f6 !important;
+            color: #9ca3af !important;
+            cursor: not-allowed !important;
+        }
+        
+        .tab-button.locked::before {
+            content: "🔒 ";
+        }
+        
+        .tab-button:not(.locked):not(.completed):hover {
+            background-color: var(--writer-primary);
+            color: white;
+        }
 
         .tab-content {
             display: none;
@@ -227,7 +252,7 @@
         <div class="flex justify-center mb-8">
             <div class="bg-white rounded-xl p-1 shadow-sm" style="border: 1px solid var(--writer-gray-200);">
                 <button 
-                    onclick="switchTab('products')" 
+                    onclick="handleTabClick('products')" 
                     id="products-tab" 
                     class="px-6 py-3 rounded-lg font-medium transition-all duration-200 tab-button active">
                     <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,7 +261,7 @@
                     Products
                 </button>
                 <button 
-                    onclick="switchTab('targeting')" 
+                    onclick="handleTabClick('targeting')" 
                     id="targeting-tab" 
                     class="px-6 py-3 rounded-lg font-medium transition-all duration-200 tab-button">
                     <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -245,7 +270,7 @@
                     Targeting
                 </button>
                 <button 
-                    onclick="switchTab('writer')" 
+                    onclick="handleTabClick('writer')" 
                     id="writer-tab" 
                     class="px-6 py-3 rounded-lg font-medium transition-all duration-200 tab-button">
                     <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -254,7 +279,7 @@
                     Social Derivative
                 </button>
                 <button 
-                    onclick="switchTab('image')" 
+                    onclick="handleTabClick('image')" 
                     id="image-tab" 
                     class="px-6 py-3 rounded-lg font-medium transition-all duration-200 tab-button">
                     <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1314,7 +1339,7 @@
             }
             
             // Switch to the Targeting tab
-            switchTab('targeting');
+            handleTabClick('targeting');
             
             // Wait a moment for the tab to switch, then start targeting
             setTimeout(() => {
@@ -1326,8 +1351,27 @@
             }, 100);
         }
 
-        // Tab switching functionality
+        // Workflow state tracking
+        let workflowState = {
+            currentStep: 'products',
+            completedSteps: [],
+            stepOrder: ['products', 'targeting', 'writer', 'image']
+        };
+
+        // Tab switching functionality with linear progression enforcement
         function switchTab(tabName) {
+            // Check if user is trying to go backwards
+            if (!canNavigateToTab(tabName)) {
+                console.log(`🚫 Navigation blocked: Cannot go to ${tabName} from ${workflowState.currentStep}`);
+                return;
+            }
+
+            // Update workflow state
+            if (!workflowState.completedSteps.includes(workflowState.currentStep)) {
+                workflowState.completedSteps.push(workflowState.currentStep);
+            }
+            workflowState.currentStep = tabName;
+
             // Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
@@ -1343,6 +1387,9 @@
             
             // Add active class to selected tab button
             document.getElementById(tabName + '-tab').classList.add('active');
+
+            // Update tab button states based on workflow progression
+            updateTabButtonStates();
             
             // Show/hide refresh button based on tab
             const refreshProductsSection = document.getElementById('refreshProductsSection');
@@ -1359,6 +1406,88 @@
             } else {
                 refreshProductsSection.style.display = 'flex';
             }
+        }
+
+        // Check if user can navigate to a specific tab
+        function canNavigateToTab(tabName) {
+            const currentIndex = workflowState.stepOrder.indexOf(workflowState.currentStep);
+            const targetIndex = workflowState.stepOrder.indexOf(tabName);
+            
+            // Can always stay on current tab
+            if (currentIndex === targetIndex) {
+                return true;
+            }
+            
+            // Can only move forward to the next step
+            if (targetIndex === currentIndex + 1) {
+                return true;
+            }
+            
+            // Cannot go backwards or skip steps
+            return false;
+        }
+
+        // Update tab button states based on workflow progression
+        function updateTabButtonStates() {
+            workflowState.stepOrder.forEach((step, index) => {
+                const button = document.getElementById(step + '-tab');
+                const currentIndex = workflowState.stepOrder.indexOf(workflowState.currentStep);
+                
+                // Remove all state classes
+                button.classList.remove('completed', 'disabled', 'locked');
+                
+                if (workflowState.completedSteps.includes(step)) {
+                    // Completed steps
+                    button.classList.add('completed');
+                    button.style.opacity = '0.7';
+                    button.style.cursor = 'not-allowed';
+                } else if (index === currentIndex) {
+                    // Current step
+                    button.style.opacity = '1';
+                    button.style.cursor = 'pointer';
+                } else if (index === currentIndex + 1) {
+                    // Next available step
+                    button.style.opacity = '1';
+                    button.style.cursor = 'pointer';
+                } else {
+                    // Future steps (locked)
+                    button.classList.add('locked');
+                    button.style.opacity = '0.4';
+                    button.style.cursor = 'not-allowed';
+                }
+            });
+        }
+
+        // Initialize workflow state and tab states
+        function initializeWorkflow() {
+            // Set initial state
+            workflowState.currentStep = 'products';
+            workflowState.completedSteps = [];
+            
+            // Update tab button states
+            updateTabButtonStates();
+            
+            console.log('🚀 Workflow initialized - starting at Products step');
+        }
+
+        // Handle tab click with navigation restrictions
+        function handleTabClick(tabName) {
+            const button = document.getElementById(tabName + '-tab');
+            
+            // Check if the tab is locked or completed
+            if (button.classList.contains('locked')) {
+                console.log(`🚫 Tab ${tabName} is locked - cannot navigate`);
+                return;
+            }
+            
+            // Check if navigation is allowed
+            if (!canNavigateToTab(tabName)) {
+                console.log(`🚫 Navigation to ${tabName} not allowed from ${workflowState.currentStep}`);
+                return;
+            }
+            
+            // Allow navigation
+            switchTab(tabName);
         }
 
         // Update Writer AI tab with selected products
@@ -1834,7 +1963,7 @@
                 };
                 
                 // Switch to the Social Derivative (Writer) tab
-                switchTab('writer');
+                handleTabClick('writer');
                 
                 // Wait a moment for the tab to switch, then populate and start
                 setTimeout(() => {
@@ -2631,7 +2760,7 @@
                 };
                 
                 // Switch to Image Generation tab
-                switchTab('image');
+                handleTabClick('image');
                 
                 // Wait a moment for the tab to switch, then populate and start
                 setTimeout(() => {
@@ -3314,6 +3443,11 @@
             updateEnhancementSelectedProducts();
             updateImageSelectedProducts();
         };
+
+        // Initialize workflow when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeWorkflow();
+        });
     </script>
 </body>
 </html>
