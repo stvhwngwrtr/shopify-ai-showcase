@@ -2234,16 +2234,13 @@
                         cardHTML += `</div></div>`;
                     }
                     
-                    // Individual Copy Button and Generate Images Button
+                    // Generate Images Button
                     const hasImagePrompts = response.image_prompts && response.image_prompts.length > 0;
                     cardHTML += `
-                        <div class="pt-3 flex gap-3" style="border-top: 1px solid var(--writer-gray-200);">
-                            <button onclick="copyProductContent(${index})" class="btn-secondary px-3 py-1 rounded text-xs font-medium">
-                                📋 Copy This Caption
-                            </button>
+                        <div class="pt-3" style="border-top: 1px solid var(--writer-gray-200);">
                             <button onclick="generateImagesFromPost(${index})" 
                                     id="generateImagesBtn-${index}"
-                                    class="btn-primary px-3 py-1 rounded text-xs font-medium" 
+                                    class="btn-primary px-4 py-2 rounded-lg text-sm font-medium w-full" 
                                     disabled
                                     title="${hasImagePrompts ? 'Please select at least one image idea to generate images' : 'No image ideas available'}">
                                 🎨 Generate Images
