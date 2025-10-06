@@ -2,6 +2,7 @@ from flask import Flask, render_template, jsonify, request, send_from_directory
 from shopify_service import get_shopify_service
 from mongodb_service import get_mongodb_service, create_instagram_preview_image
 from cloud_storage_service import get_cloud_storage_service
+from screenshot_service import get_screenshot_service
 import json
 import os
 import requests
@@ -10,6 +11,7 @@ from datetime import datetime, timedelta
 import time
 import threading
 import re
+import random
 
 # Load environment variables
 load_dotenv()
@@ -1331,9 +1333,172 @@ def record_instagram_post():
             product_category = product_data.get("product_type", "General")
             product_url = f"https://{os.getenv('SHOPIFY_SHOP_NAME', 'shop')}.myshopify.com/products/{product_data.get('handle', '')}"
             
-            # Use frontend-captured mockup if available, otherwise generate one
+            # Try screenshot service first (if configured)
+            screenshot_service = get_screenshot_service()
+            screenshot_result = None
+            
+            if screenshot_service.use_external_service and screenshot_service.api_key:
+                print("📸 Attempting screenshot capture via HTML...")
+                
+                # Generate the HTML for the Instagram preview
+                likes = str(random.randint(500, 5000))
+                preview_html = f'''<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #fafafa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }}
+        .instagram-post {{
+            width: 480px;
+            background: white;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            overflow: hidden;
+        }}
+        .post-header {{
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid #efefef;
+        }}
+        .profile-pic {{
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }}
+        .profile-pic svg {{
+            width: 16px;
+            height: 16px;
+            fill: white;
+        }}
+        .username {{
+            font-weight: 600;
+            font-size: 14px;
+            color: #262626;
+            flex: 1;
+        }}
+        .username span {{
+            display: block;
+            font-weight: 400;
+            font-size: 12px;
+            color: #8e8e8e;
+            margin-top: 2px;
+        }}
+        .post-image {{
+            width: 100%;
+            display: block;
+            background: #f0f0f0;
+        }}
+        .post-actions {{
+            display: flex;
+            padding: 8px 16px;
+            gap: 16px;
+        }}
+        .action-btn {{
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px 0;
+        }}
+        .action-btn svg {{
+            width: 24px;
+            height: 24px;
+            stroke: #262626;
+            fill: none;
+            stroke-width: 2;
+        }}
+        .post-likes {{
+            padding: 0 16px 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #262626;
+        }}
+        .post-caption {{
+            padding: 0 16px 16px;
+            font-size: 14px;
+            color: #262626;
+            line-height: 18px;
+        }}
+        .post-caption .username {{
+            font-weight: 600;
+            margin-right: 8px;
+            display: inline-block;
+        }}
+        .post-time {{
+            padding: 0 16px 16px;
+            font-size: 10px;
+            color: #8e8e8e;
+            text-transform: uppercase;
+        }}
+    </style>
+</head>
+<body>
+    <div class="instagram-post">
+        <div class="post-header">
+            <div class="profile-pic">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" fill="white"/>
+                </svg>
+            </div>
+            <div class="username">
+                SuperPossible
+                <span>Sponsored</span>
+            </div>
+            <button class="action-btn">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+            </button>
+        </div>
+        <img src="{image_url}" class="post-image" alt="{product_name}" crossorigin="anonymous">
+        <div class="post-actions">
+            <button class="action-btn">
+                <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </button>
+            <button class="action-btn">
+                <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            </button>
+            <button class="action-btn">
+                <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+            <button class="action-btn" style="margin-left: auto;">
+                <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            </button>
+        </div>
+        <div class="post-likes">{likes} likes</div>
+        <div class="post-caption">
+            <span class="username">SuperPossible</span> {caption}
+        </div>
+        <div class="post-time">Just now</div>
+    </div>
+</body>
+</html>'''
+                
+                # Capture screenshot from HTML
+                screenshot_result = screenshot_service.capture_html(preview_html, width=480, height=700)
+                
+                if screenshot_result and screenshot_result.get("success"):
+                    print("✅ Screenshot captured successfully from HTML")
+                    mockup_image_data = screenshot_result['image_data']
+                else:
+                    print(f"⚠️  Screenshot service failed: {screenshot_result.get('error')}")
+            
+            # Use frontend-captured mockup if available, or screenshot if captured
             if mockup_image_data:
-                print("📱 Using frontend-captured Instagram mockup")
+                print("📱 Using captured Instagram mockup")
                 # Extract base64 data from data URL
                 if mockup_image_data.startswith('data:image'):
                     base64_data = mockup_image_data.split(',', 1)[1]
@@ -1438,6 +1603,201 @@ def record_instagram_post():
             "success": False,
             "error": error_msg
         }), 500
+
+@app.route('/api/instagram-preview/<session_id>')
+def instagram_preview(session_id):
+    """Serve a standalone Instagram preview HTML for screenshot capture."""
+    try:
+        # Get parameters from query string
+        image_url = request.args.get('image_url', '')
+        caption = request.args.get('caption', '')
+        product_name = request.args.get('product_name', 'Product')
+        likes = request.args.get('likes', str(random.randint(500, 5000)))
+        
+        if not image_url:
+            return "Image URL required", 400
+        
+        # Create a standalone Instagram mockup HTML
+        html = f'''
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #fafafa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }}
+        .instagram-post {{
+            width: 480px;
+            background: white;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            overflow: hidden;
+        }}
+        .post-header {{
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid #efefef;
+        }}
+        .profile-pic {{
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }}
+        .profile-pic svg {{
+            width: 16px;
+            height: 16px;
+            fill: white;
+        }}
+        .username {{
+            font-weight: 600;
+            font-size: 14px;
+            color: #262626;
+            flex: 1;
+        }}
+        .username span {{
+            display: block;
+            font-weight: 400;
+            font-size: 12px;
+            color: #8e8e8e;
+            margin-top: 2px;
+        }}
+        .post-image {{
+            width: 100%;
+            display: block;
+            background: #f0f0f0;
+        }}
+        .post-actions {{
+            display: flex;
+            padding: 8px 16px;
+            gap: 16px;
+        }}
+        .action-btn {{
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px 0;
+        }}
+        .action-btn svg {{
+            width: 24px;
+            height: 24px;
+            stroke: #262626;
+            fill: none;
+            stroke-width: 2;
+        }}
+        .post-likes {{
+            padding: 0 16px 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #262626;
+        }}
+        .post-caption {{
+            padding: 0 16px 16px;
+            font-size: 14px;
+            color: #262626;
+            line-height: 18px;
+        }}
+        .post-caption .username {{
+            font-weight: 600;
+            margin-right: 8px;
+            display: inline-block;
+        }}
+        .post-time {{
+            padding: 0 16px 16px;
+            font-size: 10px;
+            color: #8e8e8e;
+            text-transform: uppercase;
+        }}
+    </style>
+</head>
+<body>
+    <div class="instagram-post">
+        <div class="post-header">
+            <div class="profile-pic">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" fill="white"/>
+                </svg>
+            </div>
+            <div class="username">
+                SuperPossible
+                <span>Sponsored</span>
+            </div>
+            <button class="action-btn">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+            </button>
+        </div>
+        <img src="{image_url}" class="post-image" alt="{product_name}" crossorigin="anonymous">
+        <div class="post-actions">
+            <button class="action-btn">
+                <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </button>
+            <button class="action-btn">
+                <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            </button>
+            <button class="action-btn">
+                <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+            <button class="action-btn" style="margin-left: auto;">
+                <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            </button>
+        </div>
+        <div class="post-likes">{likes} likes</div>
+        <div class="post-caption">
+            <span class="username">SuperPossible</span> {caption}
+        </div>
+        <div class="post-time">Just now</div>
+    </div>
+</body>
+</html>
+        '''
+        
+        return html, 200, {'Content-Type': 'text/html'}
+        
+    except Exception as e:
+        print(f"❌ Error generating preview: {e}")
+        return str(e), 500
+
+@app.route('/api/proxy-image', methods=['GET'])
+def proxy_image():
+    """Proxy external images to avoid CORS issues in html2canvas."""
+    try:
+        image_url = request.args.get('url')
+        
+        if not image_url:
+            return jsonify({"success": False, "error": "URL parameter required"}), 400
+        
+        # Download the image
+        response = requests.get(image_url, timeout=30)
+        response.raise_for_status()
+        
+        # Return the image with appropriate headers
+        from flask import Response
+        return Response(
+            response.content,
+            mimetype=response.headers.get('content-type', 'image/png'),
+            headers={
+                'Access-Control-Allow-Origin': '*',
+                'Cache-Control': 'public, max-age=3600'
+            }
+        )
+        
+    except Exception as e:
+        print(f"❌ Image proxy error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))

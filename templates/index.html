@@ -576,7 +576,7 @@
                         </p>
                         
                         <!-- API Configuration -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6" style="display: none;">
                             <div>
                                 <label class="block text-sm font-medium mb-2" style="color: var(--writer-gray-700);">
                                     Writer API Key
@@ -760,8 +760,8 @@
                             Generate compelling Instagram posts for your selected products to boost social media engagement and drive sales.
                         </p>
                         
-                        <!-- API Configuration -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <!-- API Configuration - Hidden -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6" style="display: none;">
                             <div>
                                 <label class="block text-sm font-medium mb-2" style="color: var(--writer-gray-700);">
                                     Writer API Key
@@ -1069,6 +1069,9 @@
                             <div class="flex gap-3 justify-center">
                                 <button id="postToInstagramBtn" onclick="postToInstagram()" class="btn-primary px-6 py-2 rounded-lg text-sm font-medium" style="display: none;">
                                     📤 Upload to Artifact Theater
+                                </button>
+                                <button id="debugCaptureBtn" onclick="debugCapture()" class="btn-secondary px-4 py-2 rounded-lg text-sm font-medium" style="display: none;">
+                                    🔍 Debug Capture
                                 </button>
                                 <button onclick="closeInstagramMock()" class="btn-secondary px-6 py-2 rounded-lg text-sm font-medium">
                                     ✕ Close Preview
@@ -1423,6 +1426,12 @@
                 return true;
             }
             
+            // Special case: Allow going back to Products from Targeting if no products selected
+            if (workflowState.currentStep === 'targeting' && tabName === 'products' && selectedProducts.size === 0) {
+                console.log('✅ Allowing return to Products - no products selected');
+                return true;
+            }
+            
             // Cannot go backwards or skip steps
             return false;
         }
@@ -1436,11 +1445,22 @@
                 // Remove all state classes
                 button.classList.remove('completed', 'disabled', 'locked');
                 
+                // Special case: Allow Products tab when on Targeting with no products
+                const isProductsTabWhenNoSelection = (workflowState.currentStep === 'targeting' && step === 'products' && selectedProducts.size === 0);
+                
                 if (workflowState.completedSteps.includes(step)) {
-                    // Completed steps
-                    button.classList.add('completed');
-                    button.style.opacity = '0.7';
-                    button.style.cursor = 'not-allowed';
+                    // Completed steps - but make Products clickable if special case
+                    if (isProductsTabWhenNoSelection) {
+                        button.classList.remove('completed');
+                        button.style.opacity = '1';
+                        button.style.cursor = 'pointer';
+                        button.style.backgroundColor = '#fbbf24'; // Yellow to indicate "go back"
+                        button.style.color = 'white';
+                    } else {
+                        button.classList.add('completed');
+                        button.style.opacity = '0.7';
+                        button.style.cursor = 'not-allowed';
+                    }
                 } else if (index === currentIndex) {
                     // Current step
                     button.style.opacity = '1';
@@ -1449,6 +1469,12 @@
                     // Next available step
                     button.style.opacity = '1';
                     button.style.cursor = 'pointer';
+                } else if (isProductsTabWhenNoSelection) {
+                    // Special case: make Products accessible from Targeting when no products
+                    button.style.opacity = '1';
+                    button.style.cursor = 'pointer';
+                    button.style.backgroundColor = '#fbbf24'; // Yellow to indicate "go back"
+                    button.style.color = 'white';
                 } else {
                     // Future steps (locked)
                     button.classList.add('locked');
@@ -3099,9 +3125,27 @@
             const captionData = null; // We'll generate a simple caption instead
             
             // Update Instagram mock with selected image and caption
-            document.getElementById('instagramImage').src = imageUrl;
-            document.getElementById('instagramImage').style.display = 'block';
+            const imgElement = document.getElementById('instagramImage');
+            
+            // Set up image with crossorigin before setting src
+            imgElement.crossOrigin = 'anonymous';
+            imgElement.setAttribute('data-original-url', imageUrl); // Store original URL
+            
+            // Use proxied image URL to avoid CORS issues with html2canvas
+            const proxiedImageUrl = `/api/proxy-image?url=${encodeURIComponent(imageUrl)}`;
+            imgElement.src = proxiedImageUrl;
+            imgElement.style.display = 'block';
             document.getElementById('instagramImagePlaceholder').style.display = 'none';
+            
+            // Preload the image to ensure it's ready for html2canvas
+            imgElement.onload = function() {
+                console.log('✅ Instagram image loaded successfully');
+            };
+            imgElement.onerror = function() {
+                console.error('❌ Failed to load Instagram image, falling back to direct URL');
+                // Fallback to direct URL if proxy fails
+                imgElement.src = imageUrl;
+            };
             
             // Update Instagram caption with hashtags
             const captionElement = document.getElementById('instagramCaption');
@@ -3146,9 +3190,9 @@
                 return;
             }
             
-            // Store current Instagram data for posting
+            // Store current Instagram data for posting (use original URL, not proxied)
             currentInstagramData = {
-                image_url: imageUrl,
+                image_url: imageUrl, // Original URL for MongoDB
                 caption: captionElement.textContent,
                 product_id: productId,
                 comment: ''
@@ -3158,6 +3202,9 @@
             
             // Show Instagram mock
             document.getElementById('instagramMock').style.display = 'block';
+            
+            // Show debug button for troubleshooting
+            document.getElementById('debugCaptureBtn').style.display = 'inline-block';
             
             // Check Instagram authentication status
             checkInstagramAuth();
@@ -3258,12 +3305,20 @@
         function captureInstagramMockup() {
             return new Promise((resolve, reject) => {
                 try {
-                    const mockupElement = document.querySelector('#instagramMock .max-w-md.mx-auto.bg-white.rounded-xl.shadow-lg.overflow-hidden');
+                    // Select the actual Instagram post card (white background), not the container
+                    let mockupElement = document.querySelector('#instagramMock .max-w-md.mx-auto.bg-white');
+                    
+                    if (!mockupElement) {
+                        console.error('❌ Instagram post card not found, trying fallback selector');
+                        mockupElement = document.querySelector('#instagramMock');
+                    }
                     
                     if (!mockupElement) {
                         reject(new Error('Instagram mockup element not found'));
                         return;
                     }
+                    
+                    console.log('📸 Capturing element:', mockupElement.className);
 
                     // Use html2canvas to capture the element
                     if (typeof html2canvas === 'undefined') {
@@ -3287,20 +3342,82 @@
         }
 
         function captureWithHtml2Canvas(element, resolve, reject) {
-            html2canvas(element, {
-                backgroundColor: '#ffffff',
-                scale: 2, // Higher quality
-                useCORS: true,
-                allowTaint: true,
-                width: element.offsetWidth,
-                height: element.offsetHeight
-            }).then(canvas => {
-                // Convert canvas to base64
-                const imageData = canvas.toDataURL('image/jpeg', 0.9);
-                resolve(imageData);
-            }).catch(error => {
-                reject(error);
+            // Wait for images to fully load before capturing
+            const images = element.querySelectorAll('img');
+            let imagesLoaded = 0;
+            const totalImages = images.length;
+            
+            console.log(`⏳ Waiting for ${totalImages} images to load...`);
+            
+            const checkAndCapture = () => {
+                if (imagesLoaded >= totalImages || totalImages === 0) {
+                    console.log(`✅ All images loaded (${imagesLoaded}/${totalImages}), starting capture...`);
+                    performCapture();
+                }
+            };
+            
+            // Set up load handlers for all images
+            images.forEach((img, index) => {
+                if (img.complete) {
+                    console.log(`✅ Image ${index} already loaded`);
+                    imagesLoaded++;
+                } else {
+                    img.addEventListener('load', function() {
+                        imagesLoaded++;
+                        console.log(`✅ Image ${index} loaded (${imagesLoaded}/${totalImages})`);
+                        checkAndCapture();
+                    });
+                    img.addEventListener('error', function() {
+                        imagesLoaded++;
+                        console.error(`❌ Image ${index} failed to load`);
+                        checkAndCapture();
+                    });
+                }
             });
+            
+            // Start capture immediately if all images are already loaded, otherwise wait
+            setTimeout(() => {
+                checkAndCapture();
+            }, 1000);
+            
+            function performCapture() {
+                html2canvas(element, {
+                    backgroundColor: '#ffffff',
+                    scale: 2, // Higher quality
+                    useCORS: true,
+                    allowTaint: true,
+                    foreignObjectRendering: true,
+                    removeContainer: true,
+                    imageTimeout: 15000, // Wait up to 15 seconds for images
+                    logging: true, // Enable logging for debugging
+                    width: element.scrollWidth,
+                    height: element.scrollHeight,
+                    scrollX: 0,
+                    scrollY: 0,
+                    windowWidth: element.scrollWidth,
+                    windowHeight: element.scrollHeight,
+                    onclone: function(clonedDoc) {
+                        // Ensure images are loaded in the cloned document
+                        const images = clonedDoc.querySelectorAll('img');
+                        images.forEach(img => {
+                            if (img.src && !img.complete) {
+                                img.style.display = 'block';
+                                img.style.maxWidth = '100%';
+                                img.style.height = 'auto';
+                            }
+                        });
+                    }
+                }).then(canvas => {
+                    // Convert canvas to base64
+                    const imageData = canvas.toDataURL('image/jpeg', 0.9);
+                    console.log('✅ Successfully captured Instagram mockup');
+                    console.log(`📊 Canvas size: ${canvas.width}x${canvas.height}`);
+                    resolve(imageData);
+                }).catch(error => {
+                    console.error('❌ html2canvas capture failed:', error);
+                    reject(error);
+                });
+            }
         }
 
         function checkInstagramAuth() {
@@ -3381,57 +3498,130 @@
                 return;
             }
 
-            // Capture the Instagram mockup as an image
-            captureInstagramMockup().then(mockupImageData => {
-                // Record the Instagram post to MongoDB with the captured mockup
-                const recordData = {
-                    product_id: currentInstagramData.product_id,
-                    image_url: currentInstagramData.image_url,
-                    caption: currentInstagramData.caption,
-                    comment: currentInstagramData.comment || '',
-                    mockup_image_data: mockupImageData // Include the captured mockup
-                };
+            // Skip frontend capture and use server-side generation instead
+            // Frontend html2canvas has CORS and rendering issues
+            console.log('🔄 Using server-side mockup generation (more reliable)');
+            
+            // Send without mockup_image_data to trigger server-side generation
+            const recordData = {
+                product_id: currentInstagramData.product_id,
+                image_url: currentInstagramData.image_url,
+                caption: currentInstagramData.caption,
+                comment: currentInstagramData.comment || ''
+                // No mockup_image_data - server will generate mockup
+            };
 
-                console.log('📤 Sending record data:', recordData);
+            console.log('📤 Sending record data for server-side mockup:', recordData);
 
-                // Record to MongoDB only (no Instagram posting)
-                fetch('/api/instagram/record', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(recordData)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('📤 Record response:', data);
+            fetch('/api/instagram/record', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(recordData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('📤 Record response:', data);
+                
+                if (data.success) {
+                    postBtn.innerHTML = '✅ Uploaded!';
+                    postBtn.style.backgroundColor = '#10b981';
+                    alert('Successfully uploaded to Artifact Theater!');
                     
-                    if (data.success) {
-                        postBtn.innerHTML = '✅ Uploaded!';
-                        postBtn.style.backgroundColor = '#10b981';
-                        alert('Successfully uploaded to Artifact Theater!');
-                        
-                        // Reset button after 3 seconds
-                        setTimeout(() => {
-                            postBtn.innerHTML = originalText;
-                            postBtn.style.backgroundColor = '';
-                            postBtn.disabled = false;
-                        }, 3000);
-                    } else {
-                        throw new Error(data.error || 'Failed to upload to Artifact Theater');
-                    }
-                })
-                .catch(error => {
-                    console.error('❌ Error uploading to Artifact Theater:', error);
-                    alert(`❌ Error uploading to Artifact Theater: ${error.message}`);
-                    postBtn.innerHTML = originalText;
-                    postBtn.disabled = false;
-                });
-            }).catch(error => {
-                console.error('❌ Error capturing Instagram mockup:', error);
-                alert(`❌ Error capturing Instagram mockup: ${error.message}`);
+                    // Reset button after 3 seconds
+                    setTimeout(() => {
+                        postBtn.innerHTML = originalText;
+                        postBtn.style.backgroundColor = '';
+                        postBtn.disabled = false;
+                    }, 3000);
+                } else {
+                    throw new Error(data.error || 'Failed to upload to Artifact Theater');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error uploading to Artifact Theater:', error);
+                alert(`❌ Error uploading to Artifact Theater: ${error.message}`);
                 postBtn.innerHTML = originalText;
                 postBtn.disabled = false;
+            });
+            
+            // End of server-side mockup approach */
+        }
+
+        // Debug function to test html2canvas capture
+        function debugCapture() {
+            console.log('🔍 Starting debug capture...');
+            
+            // Check if html2canvas is available
+            if (typeof html2canvas === 'undefined') {
+                console.error('❌ html2canvas not loaded');
+                alert('html2canvas library not loaded');
+                return;
+            }
+            
+            // Find the Instagram mockup element (the white card, not the container)
+            const mockupElement = document.querySelector('#instagramMock .max-w-md.mx-auto.bg-white');
+            if (!mockupElement) {
+                console.error('❌ Instagram post card not found');
+                alert('Instagram post card not found');
+                return;
+            }
+            
+            console.log('✅ Found Instagram mockup element:', mockupElement);
+            console.log('📏 Element dimensions:', {
+                offsetWidth: mockupElement.offsetWidth,
+                offsetHeight: mockupElement.offsetHeight,
+                scrollWidth: mockupElement.scrollWidth,
+                scrollHeight: mockupElement.scrollHeight
+            });
+            
+            // Check for images in the mockup
+            const images = mockupElement.querySelectorAll('img');
+            console.log(`🖼️ Found ${images.length} images in mockup`);
+            images.forEach((img, index) => {
+                console.log(`Image ${index}:`, {
+                    src: img.src,
+                    complete: img.complete,
+                    naturalWidth: img.naturalWidth,
+                    naturalHeight: img.naturalHeight,
+                    display: getComputedStyle(img).display
+                });
+            });
+            
+            // Try a simple capture first
+            html2canvas(mockupElement, {
+                backgroundColor: '#ffffff',
+                scale: 1,
+                useCORS: true,
+                allowTaint: true,
+                logging: true,
+                onclone: function(clonedDoc) {
+                    console.log('📋 Cloned document created');
+                    const clonedImages = clonedDoc.querySelectorAll('img');
+                    console.log(`🖼️ Cloned document has ${clonedImages.length} images`);
+                }
+            }).then(canvas => {
+                console.log('✅ Debug capture successful!');
+                console.log('📊 Canvas dimensions:', canvas.width, 'x', canvas.height);
+                
+                // Create a preview window
+                const previewWindow = window.open('', '_blank', 'width=800,height=600');
+                previewWindow.document.write(`
+                    <html>
+                        <head><title>Debug Capture Preview</title></head>
+                        <body>
+                            <h2>Debug Capture Result</h2>
+                            <p>Canvas size: ${canvas.width} x ${canvas.height}</p>
+                            <img src="${canvas.toDataURL()}" style="max-width: 100%; border: 1px solid #ccc;">
+                        </body>
+                    </html>
+                `);
+                
+                alert('Debug capture completed! Check the preview window.');
+            }).catch(error => {
+                console.error('❌ Debug capture failed:', error);
+                alert(`Debug capture failed: ${error.message}`);
             });
         }
 
@@ -3442,6 +3632,10 @@
             updateWriterSelectedProducts();
             updateEnhancementSelectedProducts();
             updateImageSelectedProducts();
+            
+            // Update tab button states when product selection changes
+            // This allows returning to Products from Targeting if no products are selected
+            updateTabButtonStates();
         };
 
         // Initialize workflow when page loads

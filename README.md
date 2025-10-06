@@ -15,10 +15,13 @@ Transform your Shopify store into an AI-powered marketing machine! This applicat
 - 🛍️ **Shopify Integration**: Fetches products directly from your Shopify store
 - 🤖 **Writer AI Integration**: Generate marketing content, captions, and Instagram posts
 - 🎨 **OpenAI DALL-E Integration**: AI-powered image generation for products
+- 📸 **Screenshot Service**: High-quality Instagram mockups with perfect rendering
 - 📱 **Instagram Posting**: Post generated content directly to Instagram
 - 📝 **Product Enhancement**: Improve product descriptions with AI targeting
 - 🌍 **Multi-language Support**: Target different languages and demographics
 - 🔄 **Real-time Refresh**: Update product data on demand
+- 💾 **MongoDB Integration**: Store Instagram posts in Artifact Theater
+- ☁️ **Cloudinary Storage**: Cloud-based image hosting and CDN
 - 🐳 **Docker Ready**: Containerized for easy deployment
 - ☁️ **Cloud Deployable**: Ready for Railway, Render, Heroku, and more
 

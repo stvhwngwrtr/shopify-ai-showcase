@@ -212,19 +212,21 @@ def get_mongodb_service() -> MongoDBService:
     return MongoDBService(connection_string)
 
 
-def create_instagram_preview_image(image_url: str, caption: str = "", width: int = 375, height: int = 600) -> Dict[str, Any]:
-    """Create a mobile-optimized Instagram post mockup with realistic UI elements.
+def create_instagram_preview_image(image_url: str, caption: str = "", width: int = 1080, height: int = 1350) -> Dict[str, Any]:
+    """Create a HIGH-RESOLUTION Instagram post mockup with realistic UI elements.
     
     Args:
         image_url: URL of the source image
         caption: Caption text to display
-        width: Width of the output image (mobile width)
-        height: Height of the output image (mobile height)
+        width: Width of the output image (default 1080px for high quality)
+        height: Height of the output image (default 1350px)
         
     Returns:
         Dict with success status and base64 encoded image data
     """
     try:
+        print(f"🎨 Creating high-resolution Instagram mockup ({width}x{height})...")
+        
         # Download the image
         response = requests.get(image_url, timeout=30)
         response.raise_for_status()
@@ -236,16 +238,16 @@ def create_instagram_preview_image(image_url: str, caption: str = "", width: int
         if image.mode != 'RGB':
             image = image.convert('RGB')
         
-        # Mobile Instagram dimensions (portrait aspect ratio)
+        # High-resolution Instagram dimensions (3x mobile for quality)
         post_width = width
         post_height = height
         
-        # Calculate sections
-        header_height = 60
-        image_height = 375  # Square image for mobile
+        # Calculate sections (scaled up 3x for quality)
+        header_height = 180  # 3x of 60px
+        image_height = 1080  # Square Instagram image (high res)
         ui_height = post_height - header_height - image_height
         
-        # Create the main post image
+        # Create the main post image with high resolution
         instagram_post = Image.new('RGB', (post_width, post_height), (255, 255, 255))
         
         # Resize and center the main image
@@ -276,9 +278,10 @@ def create_instagram_preview_image(image_url: str, caption: str = "", width: int
             
             for font_path in font_paths:
                 try:
-                    header_font = ImageFont.truetype(font_path, 14)
-                    caption_font = ImageFont.truetype(font_path, 12)
-                    small_font = ImageFont.truetype(font_path, 10)
+                    # 3x font sizes for high resolution
+                    header_font = ImageFont.truetype(font_path, 42)  # 3x of 14
+                    caption_font = ImageFont.truetype(font_path, 36)  # 3x of 12
+                    small_font = ImageFont.truetype(font_path, 30)   # 3x of 10
                     break
                 except:
                     continue
@@ -293,13 +296,13 @@ def create_instagram_preview_image(image_url: str, caption: str = "", width: int
             caption_font = ImageFont.load_default()
             small_font = ImageFont.load_default()
         
-        # HEADER SECTION (above image) - Instagram style
-        header_y = 10
+        # HEADER SECTION (above image) - Instagram style (3x scaled)
+        header_y = 30  # 3x of 10
         
-        # Profile picture - Instagram logo style
-        profile_size = 32
-        profile_x = 12
-        profile_y = header_y + 14
+        # Profile picture - Instagram logo style (3x scaled)
+        profile_size = 96  # 3x of 32
+        profile_x = 36  # 3x of 12
+        profile_y = header_y + 42  # 3x of 14
         
         # Draw Instagram-style profile circle (purple with white camera)
         draw.ellipse([profile_x, profile_y, profile_x + profile_size, profile_y + profile_size], 
