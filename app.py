@@ -538,21 +538,32 @@ def send_to_writer():
         for product in products:
             # Prepare individual product details with language and demographic context
             product_type = product.get('product_type', 'N/A')
-            product_details = f"{product.get('title', 'Unknown Product')} ({product_type}) for {product.get('price', 'N/A')}"
+            product_title = product.get('title', 'Unknown Product')
+            product_price = product.get('price', 'N/A')
+            product_description = product.get('description', '')
             
-            # Create language and demographic context
-            language_context = f"Target Language: {target_language.title()}"
-            demographic_context = f"Target Demographic: {target_demographic.replace('-', ' ').title()}"
+            # Clean HTML from description if present
+            if product_description:
+                import re
+                product_description = re.sub(r'<[^>]+>', '', product_description)
+                product_description = product_description.replace('&nbsp;', ' ').replace('&amp;', '&').strip()
+                # Limit description length to avoid token limits (max ~500 chars)
+                if len(product_description) > 500:
+                    product_description = product_description[:500] + '...'
             
-            # Format the request for this specific product
-            # Add instruction for image prompts to be in English
-            enhanced_product_details = f"{product_details}\n\nIMPORTANT: Generate captions in {target_language.title()}, but ALL image prompts must be in English for DALL-E compatibility."
+            # Build product details with description
+            product_details = f"""Product: {product_title}
+Type: {product_type}
+Price: {product_price}
+Description: {product_description if product_description else 'No description available'}
+
+IMPORTANT: Generate captions in {target_language.title()}, but ALL image prompts must be in English for DALL-E compatibility."""
             
             payload = {
                 "inputs": [
                     {
                         "id": "Product Details",
-                        "value": [enhanced_product_details]
+                        "value": [product_details]
                     },
                     {
                         "id": "Language",

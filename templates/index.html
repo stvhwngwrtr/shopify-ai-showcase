@@ -1669,12 +1669,22 @@
                         const price = productElement.querySelector('.text-sm.font-bold')?.textContent || 'N/A';
                         const stock = productElement.querySelector('.text-xs:last-of-type')?.textContent || 'N/A';
                         
+                        // Get full product description from global products data
+                        let description = '';
+                        if (window.currentProducts) {
+                            const product = window.currentProducts.find(p => p.id == productId);
+                            if (product && product.description) {
+                                description = product.description;
+                            }
+                        }
+                        
                         productData.push({
                             id: productId,  // Add the product ID
                             title: title,
                             product_type: productType,
                             price: price,
-                            stock: stock
+                            stock: stock,
+                            description: description  // Add full description
                         });
                     }
                 });
@@ -2770,9 +2780,9 @@
                     return;
                 }
                 
-                // Extract vendor and price from the product info
+                // Extract product_type and price from the product info
                 const infoParts = productInfo.split(' • ');
-                const vendor = infoParts[0] || 'Unknown Brand';
+                const productType = infoParts[0] || 'N/A';
                 const price = infoParts[1] || 'N/A';
                 
                 // Extract the caption from the Writer AI response
@@ -2808,14 +2818,14 @@
                 const productData = {
                     id: productId,  // Add the product ID
                     title: productTitle,
-                    vendor: vendor,
+                    product_type: productType,
                     price: price,
                     caption: caption,  // Add the caption from Writer AI
                     prompts: prompts,
                     products: [{
                         id: productId,  // Add the product ID to products array too
                         title: productTitle,
-                        vendor: vendor,
+                        product_type: productType,
                         price: price,
                         caption: caption,  // Add caption here too
                         images: productImages
