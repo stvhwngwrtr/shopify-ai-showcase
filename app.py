@@ -537,7 +537,8 @@ def send_to_writer():
         
         for product in products:
             # Prepare individual product details with language and demographic context
-            product_details = f"{product.get('title', 'Unknown Product')} from {product.get('vendor', 'Unknown Brand')} for {product.get('price', 'N/A')}"
+            product_type = product.get('product_type', 'N/A')
+            product_details = f"{product.get('title', 'Unknown Product')} ({product_type}) for {product.get('price', 'N/A')}"
             
             # Create language and demographic context
             language_context = f"Target Language: {target_language.title()}"
@@ -580,7 +581,7 @@ def send_to_writer():
                     parsed_response['product'] = {
                         'id': product.get('id'),  # Add the product ID
                         'title': product.get('title', 'Unknown Product'),
-                        'vendor': product.get('vendor', 'Unknown Brand'),
+                        'product_type': product.get('product_type', 'N/A'),
                         'price': product.get('price', 'N/A'),
                         'stock': product.get('stock', 'N/A')
                     }
@@ -599,7 +600,7 @@ def send_to_writer():
                         'product': {
                             'id': product.get('id'),  # Add the product ID
                             'title': product.get('title', 'Unknown Product'),
-                            'vendor': product.get('vendor', 'Unknown Brand'),
+                            'product_type': product.get('product_type', 'N/A'),
                             'price': product.get('price', 'N/A'),
                             'stock': product.get('stock', 'N/A')
                         },
@@ -613,7 +614,7 @@ def send_to_writer():
                 all_responses.append({
                     'product': {
                         'title': product.get('title', 'Unknown Product'),
-                        'vendor': product.get('vendor', 'Unknown Brand'),
+                        'product_type': product.get('product_type', 'N/A'),
                         'price': product.get('price', 'N/A'),
                         'stock': product.get('stock', 'N/A')
                     },
@@ -626,7 +627,7 @@ def send_to_writer():
                 all_responses.append({
                     'product': {
                         'title': product.get('title', 'Unknown Product'),
-                        'vendor': product.get('vendor', 'Unknown Brand'),
+                        'product_type': product.get('product_type', 'N/A'),
                         'price': product.get('price', 'N/A'),
                         'stock': product.get('stock', 'N/A')
                     },
@@ -718,18 +719,17 @@ def target_products():
             # Prepare detailed product information with language and demographic context
             product_details = f"""
 Product: {product.get('title', 'Unknown Product')}
-Brand/Vendor: {product.get('vendor', 'Unknown Brand')}
+Product Type: {full_product_data.get('product_type', 'N/A')}
 Price: {product.get('price', 'N/A')}
 Stock Status: {product.get('stock', 'N/A')}
-Product Type: {full_product_data.get('product_type', 'N/A')}
 Target Language: {target_language.title()}
 Target Demographic: {target_demographic.replace('-', ' ').title()}
-            """.strip()
+""".strip()
             
             # Get the full product description from Shopify (body_html)
             current_description = full_product_data.get('description', '').strip()
             if not current_description or current_description == 'No description available':
-                current_description = f"Basic product listing for {product.get('title', 'Unknown Product')} from {product.get('vendor', 'Unknown Brand')} priced at {product.get('price', 'N/A')}"
+                current_description = f"Basic product listing for {product.get('title', 'Unknown Product')} ({full_product_data.get('product_type', 'N/A')}) priced at {product.get('price', 'N/A')}"
             else:
                 # Clean up HTML tags if present in the description
                 import re
@@ -766,7 +766,7 @@ Target Demographic: {target_demographic.replace('-', ' ').title()}
                     enhancement_data['original_product'] = {
                         'id': product.get('id'),  # Add the product ID
                         'title': product.get('title', 'Unknown Product'),
-                        'vendor': product.get('vendor', 'Unknown Brand'),
+                        'product_type': product.get('product_type', 'N/A'),
                         'price': product.get('price', 'N/A'),
                         'stock': product.get('stock', 'N/A')
                     }
@@ -788,7 +788,7 @@ Target Demographic: {target_demographic.replace('-', ' ').title()}
                         'original_product': {
                             'id': product.get('id'),  # Add the product ID
                             'title': product.get('title', 'Unknown Product'),
-                            'vendor': product.get('vendor', 'Unknown Brand'),
+                            'product_type': product.get('product_type', 'N/A'),
                             'price': product.get('price', 'N/A'),
                             'stock': product.get('stock', 'N/A')
                         },
@@ -803,7 +803,7 @@ Target Demographic: {target_demographic.replace('-', ' ').title()}
                     'original_product': {
                         'id': product.get('id'),  # Add the product ID
                         'title': product.get('title', 'Unknown Product'),
-                        'vendor': product.get('vendor', 'Unknown Brand'),
+                        'product_type': product.get('product_type', 'N/A'),
                         'price': product.get('price', 'N/A'),
                         'stock': product.get('stock', 'N/A')
                     },
@@ -817,7 +817,7 @@ Target Demographic: {target_demographic.replace('-', ' ').title()}
                     'original_product': {
                         'id': product.get('id'),  # Add the product ID
                         'title': product.get('title', 'Unknown Product'),
-                        'vendor': product.get('vendor', 'Unknown Brand'),
+                        'product_type': product.get('product_type', 'N/A'),
                         'price': product.get('price', 'N/A'),
                         'stock': product.get('stock', 'N/A')
                     },

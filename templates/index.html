@@ -404,7 +404,8 @@
             <div class="product-card bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md" 
                  style="border: 1px solid var(--writer-gray-200);" 
                  onclick="selectProduct({{ product.id }}, this)"
-                 data-product-id="{{ product.id }}">
+                 data-product-id="{{ product.id }}"
+                 data-product-type="{{ product.product_type }}">
                 <!-- Product Image -->
                 {% if product.images %}
                 <div class="h-32" style="background-color: var(--writer-gray-100);">
@@ -1664,14 +1665,14 @@
                     const productElement = document.querySelector(`[data-product-id="${productId}"]`);
                     if (productElement) {
                         const title = productElement.querySelector('h3').textContent;
-                        const vendor = productElement.querySelector('.text-xs .truncate').textContent;
+                        const productType = productElement.getAttribute('data-product-type') || 'N/A';
                         const price = productElement.querySelector('.text-sm.font-bold')?.textContent || 'N/A';
                         const stock = productElement.querySelector('.text-xs:last-of-type')?.textContent || 'N/A';
                         
                         productData.push({
                             id: productId,  // Add the product ID
                             title: title,
-                            vendor: vendor,
+                            product_type: productType,
                             price: price,
                             stock: stock
                         });
@@ -1856,7 +1857,7 @@
                             ✨ ${enhancement.original_product.title}
                         </h4>
                         <div class="text-sm" style="color: var(--writer-gray-600);">
-                            ${enhancement.original_product.vendor} • ${enhancement.original_product.price}
+                            ${enhancement.original_product.product_type} • ${enhancement.original_product.price}
                         </div>
                     </div>
                 `;
@@ -2125,7 +2126,7 @@
                             📦 ${response.product.title}
                         </h4>
                         <div class="text-sm" style="color: var(--writer-gray-600);">
-                            ${response.product.vendor} • ${response.product.price}
+                            ${response.product.product_type} • ${response.product.price}
                         </div>
                     </div>
                 `;
@@ -2534,7 +2535,7 @@
                             🎨 ${result.product.title}
                         </h4>
                         <div class="text-sm" style="color: var(--writer-gray-600);">
-                            ${result.product.vendor} • ${result.product.price}
+                            ${result.product.product_type} • ${result.product.price}
                         </div>
                     </div>
                 `;
@@ -2984,7 +2985,7 @@
                             🎨 ${result.product.title}
                         </h4>
                         <div class="text-sm" style="color: var(--writer-gray-600);">
-                            ${result.product.vendor} • ${result.product.price}
+                            ${result.product.product_type} • ${result.product.price}
                         </div>
                     </div>
                 `;
