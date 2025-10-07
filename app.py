@@ -544,11 +544,14 @@ def send_to_writer():
             demographic_context = f"Target Demographic: {target_demographic.replace('-', ' ').title()}"
             
             # Format the request for this specific product
+            # Add instruction for image prompts to be in English
+            enhanced_product_details = f"{product_details}\n\nIMPORTANT: Generate captions in {target_language.title()}, but ALL image prompts must be in English for DALL-E compatibility."
+            
             payload = {
                 "inputs": [
                     {
                         "id": "Product Details",
-                        "value": [product_details]
+                        "value": [enhanced_product_details]
                     },
                     {
                         "id": "Language",
@@ -910,7 +913,7 @@ def test_writer():
             "inputs": [
                 {
                     "id": "Product Details",
-                    "value": ["Test product: Smart Watch from TechCorp for $199.99"]
+                    "value": ["Test product: Smart Watch from TechCorp for $199.99\n\nIMPORTANT: Generate captions in English, but ALL image prompts must be in English for DALL-E compatibility."]
                 },
                 {
                     "id": "Language",
