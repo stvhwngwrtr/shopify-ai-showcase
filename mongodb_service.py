@@ -14,7 +14,7 @@ import textwrap
 class MongoDBService:
     """Service for MongoDB operations related to Instagram posts."""
     
-    def __init__(self, connection_string: str, database_name: str = "instagram_posts"):
+    def __init__(self, connection_string: str, database_name: str = "SuperPossible"):
         """Initialize MongoDB connection.
         
         Args:
@@ -32,7 +32,7 @@ class MongoDBService:
         try:
             self.client = MongoClient(self.connection_string)
             self.db = self.client[self.database_name]
-            self.collection = self.db["posts"]
+            self.collection = self.db["assets"]
             print("✅ Connected to MongoDB successfully")
             return True
         except Exception as e:

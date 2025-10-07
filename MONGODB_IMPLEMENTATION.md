@@ -4,7 +4,7 @@
 
 ### 1. MongoDB Integration
 - **Database**: Connected to MongoDB Atlas using the provided connection string
-- **Collection**: `instagram_posts` collection in `instagram_posts` database
+- **Collection**: `assets` collection in `SuperPossible` database
 - **Data Structure**: Exact match to your specification
 
 ### 2. API Endpoint
