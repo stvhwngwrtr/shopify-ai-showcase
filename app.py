@@ -227,7 +227,7 @@ def analyze_product_image_with_vision(image_url, api_key):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Analyze this product image and provide a detailed description of its visual characteristics, including: colors, materials, textures, shapes, lighting, background, style, and any distinctive features. Be specific and concise (max 200 words). Focus on visual elements that would help an AI image generator recreate a similar style."
+                            "text": "Analyze ONLY the product itself in this image. Describe the product's physical characteristics: colors, materials, textures, shapes, form factor, and distinctive visual features. Focus exclusively on the product, NOT the background, lighting setup, or photography style. Be specific and concise (max 150 words). This description will help an AI recreate the product's appearance in new contexts."
                         },
                         {
                             "type": "image_url",
@@ -239,7 +239,7 @@ def analyze_product_image_with_vision(image_url, api_key):
                     ]
                 }
             ],
-            max_tokens=300
+            max_tokens=250
         )
         
         description = response.choices[0].message.content
@@ -273,9 +273,9 @@ def make_dalle_api_call(prompt, api_key, size="1024x1024", quality="standard", n
             vision_result = analyze_product_image_with_vision(reference_image_url, api_key)
             
             if vision_result['success'] and vision_result['description']:
-                # Enhance the prompt with visual analysis from the reference image
-                enhanced_prompt = f"{prompt}. Visual style reference: {vision_result['description']}"
-                print(f"✨ Enhanced prompt with vision analysis: {enhanced_prompt[:150]}...")
+                # Enhance the prompt with product characteristics from the reference image
+                enhanced_prompt = f"{prompt}. Product appearance: {vision_result['description']}"
+                print(f"✨ Enhanced prompt with product analysis: {enhanced_prompt[:150]}...")
             else:
                 print(f"⚠️ Could not analyze reference image, using original prompt")
         
