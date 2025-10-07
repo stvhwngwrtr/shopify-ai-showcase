@@ -334,10 +334,6 @@ def create_instagram_preview_image(image_url: str, caption: str = "", width: int
         profile_name_y = header_y + 20
         draw.text((profile_name_x, profile_name_y), "SuperPossible", fill=(0, 0, 0), font=header_font)
         
-        # Sponsored label - smaller and positioned better
-        sponsored_y = profile_name_y + 16
-        draw.text((profile_name_x, sponsored_y), "Sponsored", fill=(120, 120, 120), font=small_font)
-        
         # Three dots menu - better positioning
         dots_x = post_width - 25
         dots_y = header_y + 25

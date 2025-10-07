@@ -1490,7 +1490,6 @@ def record_instagram_post():
             </div>
             <div class="username">
                 SuperPossible
-                <span>Sponsored</span>
             </div>
             <button class="action-btn">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
@@ -1796,7 +1795,6 @@ def instagram_preview(session_id):
             </div>
             <div class="username">
                 SuperPossible
-                <span>Sponsored</span>
             </div>
             <button class="action-btn">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
