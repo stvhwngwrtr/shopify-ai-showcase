@@ -1376,6 +1376,21 @@ def record_instagram_post():
                 
                 # Generate the HTML for the Instagram preview
                 likes = str(random.randint(500, 5000))
+                
+                # Read the profile logo SVG content to embed it directly
+                profile_logo_svg = '''<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .teal-shape { fill: #20B2AA; }
+    </style>
+  </defs>
+  <!-- Top teal shape (resembling upper half of S) -->
+  <path class="teal-shape" d="M32 8 C20 8, 12 16, 12 24 C12 28, 14 32, 18 34 C22 36, 28 36, 32 32 C36 28, 40 24, 44 20 C48 16, 52 12, 56 8 C48 8, 40 8, 32 8 Z"/>
+  
+  <!-- Bottom teal shape (resembling lower half of S) -->
+  <path class="teal-shape" d="M32 56 C44 56, 52 48, 52 40 C52 36, 50 32, 46 30 C42 28, 36 28, 32 32 C28 36, 24 40, 20 44 C16 48, 12 52, 8 56 C16 56, 24 56, 32 56 Z"/>
+</svg>'''
+                
                 preview_html = f'''<!DOCTYPE html>
 <html>
 <head>
@@ -1416,10 +1431,9 @@ def record_instagram_post():
             margin-right: 12px;
             overflow: hidden;
         }}
-        .profile-pic img {{
+        .profile-pic svg {{
             width: 100%;
             height: 100%;
-            object-fit: cover;
         }}
         .username {{
             font-weight: 600;
@@ -1486,7 +1500,7 @@ def record_instagram_post():
     <div class="instagram-post">
         <div class="post-header">
             <div class="profile-pic">
-                <img src="/profile-logo.svg" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+                {profile_logo_svg}
             </div>
             <div class="username">
                 SuperPossible
@@ -1679,6 +1693,20 @@ def instagram_preview(session_id):
         # URL encode the image URL for the proxy endpoint
         encoded_image_url = requests.utils.quote(image_url, safe='')
         
+        # Embed the profile logo SVG directly
+        profile_logo_svg = '''<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .teal-shape { fill: #20B2AA; }
+    </style>
+  </defs>
+  <!-- Top teal shape (resembling upper half of S) -->
+  <path class="teal-shape" d="M32 8 C20 8, 12 16, 12 24 C12 28, 14 32, 18 34 C22 36, 28 36, 32 32 C36 28, 40 24, 44 20 C48 16, 52 12, 56 8 C48 8, 40 8, 32 8 Z"/>
+  
+  <!-- Bottom teal shape (resembling lower half of S) -->
+  <path class="teal-shape" d="M32 56 C44 56, 52 48, 52 40 C52 36, 50 32, 46 30 C42 28, 36 28, 32 32 C28 36, 24 40, 20 44 C16 48, 12 52, 8 56 C16 56, 24 56, 32 56 Z"/>
+</svg>'''
+        
         # Create a standalone Instagram mockup HTML
         html = f'''
 <!DOCTYPE html>
@@ -1721,10 +1749,9 @@ def instagram_preview(session_id):
             margin-right: 12px;
             overflow: hidden;
         }}
-        .profile-pic img {{
+        .profile-pic svg {{
             width: 100%;
             height: 100%;
-            object-fit: cover;
         }}
         .username {{
             font-weight: 600;
@@ -1791,7 +1818,7 @@ def instagram_preview(session_id):
     <div class="instagram-post">
         <div class="post-header">
             <div class="profile-pic">
-                <img src="/profile-logo.svg" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+                {profile_logo_svg}
             </div>
             <div class="username">
                 SuperPossible
