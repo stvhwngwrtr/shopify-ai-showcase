@@ -1384,11 +1384,11 @@ def record_instagram_post():
       .teal-shape { fill: #20B2AA; }
     </style>
   </defs>
-  <!-- Top teal shape (resembling upper half of S) -->
-  <path class="teal-shape" d="M32 8 C20 8, 12 16, 12 24 C12 28, 14 32, 18 34 C22 36, 28 36, 32 32 C36 28, 40 24, 44 20 C48 16, 52 12, 56 8 C48 8, 40 8, 32 8 Z"/>
+  <!-- Top curved shape (bean/comma-like) -->
+  <path class="teal-shape" d="M16 20 C12 16, 8 20, 8 28 C8 36, 12 40, 20 44 C28 48, 36 48, 44 44 C48 42, 50 38, 50 34 C50 30, 48 26, 44 24 C40 22, 36 22, 32 24 C28 22, 24 22, 20 24 C18 22, 16 20, 16 20 Z"/>
   
-  <!-- Bottom teal shape (resembling lower half of S) -->
-  <path class="teal-shape" d="M32 56 C44 56, 52 48, 52 40 C52 36, 50 32, 46 30 C42 28, 36 28, 32 32 C28 36, 24 40, 20 44 C16 48, 12 52, 8 56 C16 56, 24 56, 32 56 Z"/>
+  <!-- Bottom curved shape (bean/comma-like) -->
+  <path class="teal-shape" d="M48 44 C52 48, 56 44, 56 36 C56 28, 52 24, 44 20 C36 16, 28 16, 20 20 C16 22, 14 26, 14 30 C14 34, 16 38, 20 40 C24 42, 28 42, 32 40 C36 42, 40 42, 44 40 C46 42, 48 44, 48 44 Z"/>
 </svg>'''
                 
                 preview_html = f'''<!DOCTYPE html>
@@ -1700,11 +1700,11 @@ def instagram_preview(session_id):
       .teal-shape { fill: #20B2AA; }
     </style>
   </defs>
-  <!-- Top teal shape (resembling upper half of S) -->
-  <path class="teal-shape" d="M32 8 C20 8, 12 16, 12 24 C12 28, 14 32, 18 34 C22 36, 28 36, 32 32 C36 28, 40 24, 44 20 C48 16, 52 12, 56 8 C48 8, 40 8, 32 8 Z"/>
+  <!-- Top curved shape (bean/comma-like) -->
+  <path class="teal-shape" d="M16 20 C12 16, 8 20, 8 28 C8 36, 12 40, 20 44 C28 48, 36 48, 44 44 C48 42, 50 38, 50 34 C50 30, 48 26, 44 24 C40 22, 36 22, 32 24 C28 22, 24 22, 20 24 C18 22, 16 20, 16 20 Z"/>
   
-  <!-- Bottom teal shape (resembling lower half of S) -->
-  <path class="teal-shape" d="M32 56 C44 56, 52 48, 52 40 C52 36, 50 32, 46 30 C42 28, 36 28, 32 32 C28 36, 24 40, 20 44 C16 48, 12 52, 8 56 C16 56, 24 56, 32 56 Z"/>
+  <!-- Bottom curved shape (bean/comma-like) -->
+  <path class="teal-shape" d="M48 44 C52 48, 56 44, 56 36 C56 28, 52 24, 44 20 C36 16, 28 16, 20 20 C16 22, 14 26, 14 30 C14 34, 16 38, 20 40 C24 42, 28 42, 32 40 C36 42, 40 42, 44 40 C46 42, 48 44, 48 44 Z"/>
 </svg>'''
         
         # Create a standalone Instagram mockup HTML
