@@ -210,40 +210,83 @@ def validate_and_sanitize_prompt(prompt):
     
     return True, sanitized, "Safe"
 
-def make_dalle_api_call(prompt, api_key, size="1024x1024", quality="standard", n=1, reference_image_url=None):
-    """Make a DALL-E API call to generate images with optional reference image."""
+def analyze_product_image_with_vision(image_url, api_key):
+    """Use GPT-4 Vision to analyze a product image and generate a detailed description."""
     try:
         from openai import OpenAI
         
         client = OpenAI(api_key=api_key)
         
-        # If reference image is provided, use image variation or editing
+        print(f"🔍 Analyzing product image with GPT-4 Vision: {image_url[:80]}...")
+        
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Analyze this product image and provide a detailed description of its visual characteristics, including: colors, materials, textures, shapes, lighting, background, style, and any distinctive features. Be specific and concise (max 200 words). Focus on visual elements that would help an AI image generator recreate a similar style."
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": image_url,
+                                "detail": "high"
+                            }
+                        }
+                    ]
+                }
+            ],
+            max_tokens=300
+        )
+        
+        description = response.choices[0].message.content
+        print(f"✅ Vision analysis complete: {description[:100]}...")
+        
+        return {
+            'success': True,
+            'description': description
+        }
+        
+    except Exception as e:
+        error_msg = f"GPT-4 Vision API error: {str(e)}"
+        print(f"⚠️ {error_msg}")
+        return {
+            'success': False,
+            'error': error_msg,
+            'description': None
+        }
+
+def make_dalle_api_call(prompt, api_key, size="1024x1024", quality="standard", n=1, reference_image_url=None):
+    """Make a DALL-E API call to generate images with optional reference image analysis."""
+    try:
+        from openai import OpenAI
+        
+        client = OpenAI(api_key=api_key)
+        
+        # If reference image is provided, analyze it with GPT-4 Vision first
+        enhanced_prompt = prompt
         if reference_image_url:
-            # Download the reference image
-            import requests
-            response = requests.get(reference_image_url, timeout=30)
-            response.raise_for_status()
+            print(f"🎨 Using reference image to enhance prompt")
+            vision_result = analyze_product_image_with_vision(reference_image_url, api_key)
             
-            # Create image variation based on reference image
-            # Note: DALL-E 3 doesn't support direct image-to-image, but we can use it as inspiration
-            enhanced_prompt = f"Create a product showcase image inspired by this reference: {prompt}. Style: professional product photography, clean background, high quality, commercial photography style."
-            
-            dalle_response = client.images.generate(
-                model="dall-e-3",
-                prompt=enhanced_prompt,
-                size=size,
-                quality=quality,
-                n=n
-            )
-        else:
-            # Standard text-to-image generation
-            dalle_response = client.images.generate(
-                model="dall-e-3",
-                prompt=prompt,
-                size=size,
-                quality=quality,
-                n=n
-            )
+            if vision_result['success'] and vision_result['description']:
+                # Enhance the prompt with visual analysis from the reference image
+                enhanced_prompt = f"{prompt}. Visual style reference: {vision_result['description']}"
+                print(f"✨ Enhanced prompt with vision analysis: {enhanced_prompt[:150]}...")
+            else:
+                print(f"⚠️ Could not analyze reference image, using original prompt")
+        
+        # Standard text-to-image generation with potentially enhanced prompt
+        dalle_response = client.images.generate(
+            model="dall-e-3",
+            prompt=enhanced_prompt,
+            size=size,
+            quality=quality,
+            n=n
+        )
         
         return {
             'success': True,
@@ -984,11 +1027,13 @@ def generate_dalle_images():
         
         print(f"🎨 Generate request - API key present: {bool(api_key)}")
         print(f"🎨 Products for fallback: {len(products)} products provided")
-        print(f"🎨 Reference image: {reference_image_url or 'None'}")
         
         # Extract product description for context (if available)
         product_description = ''
+        product_image_url = None
+        
         if products and len(products) > 0:
+            # Get description
             product_description = products[0].get('description', '')
             if product_description:
                 # Clean HTML from description
@@ -999,6 +1044,19 @@ def generate_dalle_images():
                 if len(product_description) > 300:
                     product_description = product_description[:300] + '...'
                 print(f"📝 Using product description context: {product_description[:100]}...")
+            
+            # Get first product image for visual reference (if not explicitly provided)
+            if not reference_image_url:
+                product_images = products[0].get('images', [])
+                if product_images and len(product_images) > 0:
+                    product_image_url = product_images[0]
+                    print(f"🖼️ Using Shopify product image as reference: {product_image_url[:80]}...")
+                else:
+                    print(f"⚠️ No product images available for reference")
+            else:
+                product_image_url = reference_image_url
+        
+        print(f"🎨 Reference image: {product_image_url[:80] if product_image_url else 'None'}...")
         
         if not api_key:
             return jsonify({
@@ -1038,8 +1096,8 @@ def generate_dalle_images():
                 prompt_images = []
                 api_error_for_prompt = None
                 
-                # Make DALL-E API call with optional reference image
-                api_result = make_dalle_api_call(actual_prompt, api_key, size="1024x1024", quality="standard", n=1, reference_image_url=reference_image_url)
+                # Make DALL-E API call with optional reference image from Shopify product
+                api_result = make_dalle_api_call(actual_prompt, api_key, size="1024x1024", quality="standard", n=1, reference_image_url=product_image_url)
                 
                 if api_result['success']:
                     response = api_result['response']
