@@ -548,7 +548,15 @@ def send_to_writer():
                 "inputs": [
                     {
                         "id": "Product Details",
-                        "value": [f"{product_details}\n{language_context}\n{demographic_context}"]
+                        "value": [product_details]
+                    },
+                    {
+                        "id": "Language",
+                        "value": [target_language.title()]
+                    },
+                    {
+                        "id": "Demographic",
+                        "value": [target_demographic.replace('-', ' ').title()]
                     }
                 ]
             }
@@ -903,6 +911,14 @@ def test_writer():
                 {
                     "id": "Product Details",
                     "value": ["Test product: Smart Watch from TechCorp for $199.99"]
+                },
+                {
+                    "id": "Language",
+                    "value": ["English"]
+                },
+                {
+                    "id": "Demographic",
+                    "value": ["Fitness Enthusiasts"]
                 }
             ]
         }
