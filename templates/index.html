@@ -2774,6 +2774,11 @@
                 const vendor = infoParts[0] || 'Unknown Brand';
                 const price = infoParts[1] || 'N/A';
                 
+                // Extract the caption from the Writer AI response
+                const captionElement = productCards[postIndex].querySelector('.caption-text');
+                const caption = captionElement ? captionElement.textContent.trim() : '';
+                console.log('🔍 Extracted caption from Writer AI response:', caption);
+                
                 // Get selected image ideas (or all if none selected)
                 const selectedImagePrompts = productCards[postIndex].querySelectorAll('.image-idea.selected p');
                 const allImagePrompts = productCards[postIndex].querySelectorAll('.image-idea p');
@@ -2804,12 +2809,14 @@
                     title: productTitle,
                     vendor: vendor,
                     price: price,
+                    caption: caption,  // Add the caption from Writer AI
                     prompts: prompts,
                     products: [{
                         id: productId,  // Add the product ID to products array too
                         title: productTitle,
                         vendor: vendor,
                         price: price,
+                        caption: caption,  // Add caption here too
                         images: productImages
                     }]
                 };
@@ -3039,7 +3046,8 @@
                                                     data-image-id="${imageId}"
                                                     data-image-url="${image.url}"
                                                     data-prompt="${promptResult.prompt}"
-                                                    data-product-title="${result.product.title}">
+                                                    data-product-title="${result.product.title}"
+                                                    data-caption="${result.product.caption || ''}">
                                                 📱 Create Instagram Post
                                             </button>
                                             <button class="download-btn flex-1 text-xs px-3 py-2 bg-purple-50 text-purple-600 rounded hover:bg-purple-100 transition-colors"
@@ -3091,6 +3099,7 @@
                 const imageUrl = event.target.getAttribute('data-image-url');
                 const prompt = event.target.getAttribute('data-prompt');
                 const productTitle = event.target.getAttribute('data-product-title');
+                const caption = event.target.getAttribute('data-caption') || '';
                 
                 // Get the product ID from the selected products (Products tab selection)
                 // Use the first selected product ID since we're posting images for the Writer response
@@ -3116,10 +3125,11 @@
                 console.log('  imageUrl:', imageUrl);
                 console.log('  prompt:', prompt);
                 console.log('  productTitle:', productTitle);
+                console.log('  caption:', caption);
                 console.log('  productId:', productId);
                 console.log('  productId type:', typeof productId);
                 
-                selectImageForInstagram(imageId, imageUrl, prompt, productTitle, productId);
+                selectImageForInstagram(imageId, imageUrl, prompt, productTitle, productId, caption);
             } else if (event.target.classList.contains('download-btn')) {
                 const imageUrl = event.target.getAttribute('data-image-url');
                 const filename = event.target.getAttribute('data-filename');
@@ -3156,16 +3166,12 @@
             return productIds[productIndex] || null;
         }
 
-        function selectImageForInstagram(imageId, imageUrl, prompt, productTitle, productId) {
+        function selectImageForInstagram(imageId, imageUrl, prompt, productTitle, productId, caption = '') {
             // Debug: Log function parameters
             console.log('🔍 selectImageForInstagram called with:', {
-                imageId, imageUrl, prompt, productTitle, productId
+                imageId, imageUrl, prompt, productTitle, productId, caption
             });
             console.log('🔍 Selected products:', Array.from(selectedProducts));
-            
-            // Find the Instagram caption and hashtags from the specific Social Derivative result card
-            // For now, we'll use a simple caption since we don't have the product index anymore
-            const captionData = null; // We'll generate a simple caption instead
             
             // Update Instagram mock with selected image and caption
             const imgElement = document.getElementById('instagramImage');
@@ -3190,16 +3196,16 @@
                 imgElement.src = imageUrl;
             };
             
-            // Update Instagram caption with hashtags
+            // Update Instagram caption - use caption from Writer AI if available, otherwise generate a simple one
             const captionElement = document.getElementById('instagramCaption');
-            if (captionData && captionData.caption) {
-                let fullCaption = captionData.caption;
-                if (captionData.hashtags && captionData.hashtags.length > 0) {
-                    fullCaption += ' ' + captionData.hashtags.join(' ');
-                }
-                captionElement.textContent = fullCaption;
+            if (caption && caption.trim()) {
+                // Use the caption from the Instagram Post Creator agent (in the specified language)
+                captionElement.textContent = caption;
+                console.log('✅ Using caption from Instagram Post Creator agent:', caption);
             } else {
+                // Fallback to a generic caption if no caption is available
                 captionElement.textContent = `Check out this amazing ${productTitle}! ✨ #${productTitle.replace(/\s+/g, '')} #SuperPossible #Shopify`;
+                console.log('⚠️ No caption from Writer AI, using fallback caption');
             }
             
             // Update username and timestamp (always use SuperPossible)
