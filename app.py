@@ -986,6 +986,20 @@ def generate_dalle_images():
         print(f"🎨 Products for fallback: {len(products)} products provided")
         print(f"🎨 Reference image: {reference_image_url or 'None'}")
         
+        # Extract product description for context (if available)
+        product_description = ''
+        if products and len(products) > 0:
+            product_description = products[0].get('description', '')
+            if product_description:
+                # Clean HTML from description
+                import re
+                product_description = re.sub(r'<[^>]+>', '', product_description)
+                product_description = product_description.replace('&nbsp;', ' ').replace('&amp;', '&').strip()
+                # Limit to 300 chars for DALL-E context
+                if len(product_description) > 300:
+                    product_description = product_description[:300] + '...'
+                print(f"📝 Using product description context: {product_description[:100]}...")
+        
         if not api_key:
             return jsonify({
                 "success": False, 
@@ -1011,9 +1025,14 @@ def generate_dalle_images():
                     })
                     continue
                 
-                # Use the sanitized prompt for generation
-                actual_prompt = sanitized_prompt
-                print(f"🔍 Using sanitized prompt: {actual_prompt[:100]}...")
+                # Enhance the prompt with product description context if available
+                if product_description:
+                    # Add product context to help DALL-E understand the product better
+                    actual_prompt = f"{sanitized_prompt}. Product context: {product_description}"
+                    print(f"🔍 Enhanced prompt with product description: {actual_prompt[:150]}...")
+                else:
+                    actual_prompt = sanitized_prompt
+                    print(f"🔍 Using sanitized prompt: {actual_prompt[:100]}...")
                 
                 # Generate 1 image for each prompt
                 prompt_images = []

@@ -2802,16 +2802,22 @@
                 
                 const prompts = Array.from(imagePromptsToUse).map(p => p.textContent);
                 
-                // Get product images for fallback (check if we have product data)
+                // Get product images and description for fallback (check if we have product data)
                 const productImages = [];
+                let productDescription = '';
                 
                 // Try to find the original product data from selectedProducts or global products
                 if (window.currentProducts) {
                     const matchingProduct = window.currentProducts.find(p => 
                         p.title === productTitle || p.title.includes(productTitle.replace('📦 ', ''))
                     );
-                    if (matchingProduct && matchingProduct.images) {
-                        productImages.push(...matchingProduct.images);
+                    if (matchingProduct) {
+                        if (matchingProduct.images) {
+                            productImages.push(...matchingProduct.images);
+                        }
+                        if (matchingProduct.description) {
+                            productDescription = matchingProduct.description;
+                        }
                     }
                 }
                 
@@ -2820,6 +2826,7 @@
                     title: productTitle,
                     product_type: productType,
                     price: price,
+                    description: productDescription,  // Add the full description
                     caption: caption,  // Add the caption from Writer AI
                     prompts: prompts,
                     products: [{
@@ -2827,6 +2834,7 @@
                         title: productTitle,
                         product_type: productType,
                         price: price,
+                        description: productDescription,  // Add description here too
                         caption: caption,  // Add caption here too
                         images: productImages
                     }]
