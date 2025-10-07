@@ -62,6 +62,8 @@ class CloudStorageService:
             print(f"📁 Uploading as: mockups/{filename}")
             
             # Upload to Cloudinary
+            # Note: Cloudinary context doesn't support special characters/emojis well
+            # Use tags for basic metadata instead
             result = cloudinary.uploader.upload(
                 io.BytesIO(image_bytes),
                 public_id=f"mockups/{filename}",
@@ -70,11 +72,7 @@ class CloudStorageService:
                 format="jpg",
                 quality="auto",
                 fetch_format="auto",
-                tags=["instagram", "mockup", "social_media"],
-                context={
-                    "caption": caption[:500],  # Cloudinary context limit
-                    "session_id": session_id
-                }
+                tags=["instagram", "mockup", "social_media", f"session_{session_id}"]
             )
             
             print(f"✅ Upload successful: {result['secure_url']}")
