@@ -1384,11 +1384,11 @@ def record_instagram_post():
       .teal-shape { fill: #20B2AA; }
     </style>
   </defs>
-  <!-- Top curved shape (bean/comma-like) -->
-  <path class="teal-shape" d="M16 20 C12 16, 8 20, 8 28 C8 36, 12 40, 20 44 C28 48, 36 48, 44 44 C48 42, 50 38, 50 34 C50 30, 48 26, 44 24 C40 22, 36 22, 32 24 C28 22, 24 22, 20 24 C18 22, 16 20, 16 20 Z"/>
+  <!-- Top bean/comma shape (curved downwards and to the right) -->
+  <path class="teal-shape" d="M20 12 C16 8, 8 12, 8 20 C8 28, 12 32, 20 36 C28 40, 36 40, 44 36 C48 34, 50 30, 50 26 C50 22, 48 18, 44 16 C40 14, 36 14, 32 16 C28 14, 24 14, 20 16 C18 14, 16 12, 20 12 Z"/>
   
-  <!-- Bottom curved shape (bean/comma-like) -->
-  <path class="teal-shape" d="M48 44 C52 48, 56 44, 56 36 C56 28, 52 24, 44 20 C36 16, 28 16, 20 20 C16 22, 14 26, 14 30 C14 34, 16 38, 20 40 C24 42, 28 42, 32 40 C36 42, 40 42, 44 40 C46 42, 48 44, 48 44 Z"/>
+  <!-- Bottom bean/comma shape (curved upwards and to the left) -->
+  <path class="teal-shape" d="M44 52 C48 56, 56 52, 56 44 C56 36, 52 32, 44 28 C36 24, 28 24, 20 28 C16 30, 14 34, 14 38 C14 42, 16 46, 20 48 C24 50, 28 50, 32 48 C36 50, 40 50, 44 48 C46 50, 48 52, 44 52 Z"/>
 </svg>'''
                 
                 preview_html = f'''<!DOCTYPE html>
@@ -1700,11 +1700,11 @@ def instagram_preview(session_id):
       .teal-shape { fill: #20B2AA; }
     </style>
   </defs>
-  <!-- Top curved shape (bean/comma-like) -->
-  <path class="teal-shape" d="M16 20 C12 16, 8 20, 8 28 C8 36, 12 40, 20 44 C28 48, 36 48, 44 44 C48 42, 50 38, 50 34 C50 30, 48 26, 44 24 C40 22, 36 22, 32 24 C28 22, 24 22, 20 24 C18 22, 16 20, 16 20 Z"/>
+  <!-- Top bean/comma shape (curved downwards and to the right) -->
+  <path class="teal-shape" d="M20 12 C16 8, 8 12, 8 20 C8 28, 12 32, 20 36 C28 40, 36 40, 44 36 C48 34, 50 30, 50 26 C50 22, 48 18, 44 16 C40 14, 36 14, 32 16 C28 14, 24 14, 20 16 C18 14, 16 12, 20 12 Z"/>
   
-  <!-- Bottom curved shape (bean/comma-like) -->
-  <path class="teal-shape" d="M48 44 C52 48, 56 44, 56 36 C56 28, 52 24, 44 20 C36 16, 28 16, 20 20 C16 22, 14 26, 14 30 C14 34, 16 38, 20 40 C24 42, 28 42, 32 40 C36 42, 40 42, 44 40 C46 42, 48 44, 48 44 Z"/>
+  <!-- Bottom bean/comma shape (curved upwards and to the left) -->
+  <path class="teal-shape" d="M44 52 C48 56, 56 52, 56 44 C56 36, 52 32, 44 28 C36 24, 28 24, 20 28 C16 30, 14 34, 14 38 C14 42, 16 46, 20 48 C24 50, 28 50, 32 48 C36 50, 40 50, 44 48 C46 50, 48 52, 44 52 Z"/>
 </svg>'''
         
         # Create a standalone Instagram mockup HTML
