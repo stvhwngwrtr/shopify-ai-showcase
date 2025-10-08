@@ -17,37 +17,71 @@
             --writer-success: #10b981;
             --writer-error: #ef4444;
             --writer-warning: #f59e0b;
-            --writer-gray-50: #f9fafb;
-            --writer-gray-100: #f3f4f6;
-            --writer-gray-200: #e5e7eb;
-            --writer-gray-300: #d1d5db;
-            --writer-gray-400: #9ca3af;
+            
+            /* Dark theme colors */
+            --writer-bg-primary: #0a0d14;
+            --writer-bg-secondary: #14171f;
+            --writer-bg-tertiary: #1c1f2a;
+            --writer-border: #2a2d3a;
+            --writer-border-light: #363944;
+            
+            --writer-text-primary: #ffffff;
+            --writer-text-secondary: #b4b8c5;
+            --writer-text-tertiary: #8b8f9f;
+            
+            --writer-gray-50: #363944;
+            --writer-gray-100: #2a2d3a;
+            --writer-gray-200: #1c1f2a;
+            --writer-gray-300: #2a2d3a;
+            --writer-gray-400: #4a4e5f;
             --writer-gray-500: #6b7280;
-            --writer-gray-600: #4b5563;
-            --writer-gray-700: #374151;
-            --writer-gray-800: #1f2937;
-            --writer-gray-900: #111827;
+            --writer-gray-600: #8b8f9f;
+            --writer-gray-700: #b4b8c5;
+            --writer-gray-800: #d1d5e0;
+            --writer-gray-900: #f0f2f7;
             --writer-white: #ffffff;
             --writer-black: #000000;
         }
         
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--writer-border) var(--writer-bg-secondary);
+        }
+        
+        *::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        *::-webkit-scrollbar-track {
+            background: var(--writer-bg-secondary);
+        }
+        
+        *::-webkit-scrollbar-thumb {
+            background-color: var(--writer-border);
+            border-radius: 5px;
+            border: 2px solid var(--writer-bg-secondary);
+        }
+        
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--writer-bg-primary);
+            color: var(--writer-text-primary);
         }
         
         .product-card {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid var(--writer-gray-200);
+            border: 1px solid var(--writer-border);
+            background-color: var(--writer-bg-secondary);
         }
         .product-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            border-color: var(--writer-blue-light);
+            box-shadow: 0 20px 25px -5px rgba(0, 102, 255, 0.2), 0 10px 10px -5px rgba(0, 102, 255, 0.1);
+            border-color: var(--writer-primary);
         }
         
         .loading-spinner {
-            border: 3px solid var(--writer-gray-200);
-            border-top: 3px solid var(--writer-blue);
+            border: 3px solid var(--writer-border);
+            border-top: 3px solid var(--writer-primary);
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -122,20 +156,21 @@
 
         /* Tab Styles */
         .tab-button {
-            color: var(--writer-gray-600);
+            color: var(--writer-text-tertiary);
             background-color: transparent;
-            border-radius: 6px;
+            border-radius: 8px;
             font-weight: 500;
         }
 
         .tab-button.active {
-            color: var(--writer-primary);
-            background-color: white;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            color: var(--writer-text-primary);
+            background-color: var(--writer-bg-tertiary);
+            box-shadow: 0 1px 3px rgba(0, 102, 255, 0.1);
+            border: 1px solid var(--writer-border-light);
         }
         
         .tab-button.completed {
-            background-color: #10b981 !important;
+            background-color: var(--writer-success) !important;
             color: white !important;
         }
         
@@ -145,9 +180,10 @@
         }
         
         .tab-button.locked {
-            background-color: #f3f4f6 !important;
-            color: #9ca3af !important;
+            background-color: var(--writer-bg-tertiary) !important;
+            color: var(--writer-text-tertiary) !important;
             cursor: not-allowed !important;
+            opacity: 0.5;
         }
         
         .tab-button.locked::before {
@@ -157,6 +193,7 @@
         .tab-button:not(.locked):not(.completed):hover {
             background-color: var(--writer-primary);
             color: white;
+            box-shadow: 0 1px 3px rgba(0, 102, 255, 0.3);
         }
 
         .tab-content {
@@ -216,22 +253,24 @@
         .editable-content[contenteditable="true"] {
             outline: 2px solid var(--writer-primary);
             outline-offset: 2px;
-            background-color: #ffffff !important;
+            background-color: var(--writer-bg-primary) !important;
+            color: var(--writer-text-primary) !important;
             cursor: text;
         }
         
         .editable-content[contenteditable="true"]:focus {
             outline: 2px solid var(--writer-primary);
             outline-offset: 2px;
+            background-color: var(--writer-bg-secondary) !important;
         }
         
         .editing-mode {
-            background-color: #f0f9ff !important;
+            background-color: var(--writer-bg-secondary) !important;
             border-color: var(--writer-primary) !important;
         }
     </style>
 </head>
-<body style="background-color: var(--writer-gray-50);" class="min-h-screen">
+<body style="background-color: var(--writer-bg-primary);" class="min-h-screen">
     <div class="container mx-auto px-4 py-8">
         <!-- Header -->
         <div class="text-center mb-12">
@@ -240,17 +279,17 @@
                     <img src="/writer.webp" alt="Writer AI Logo" class="h-8">
                 </div>
                 <div class="text-left">
-                    <span class="text-2xl font-bold" style="color: var(--writer-gray-900);">Writer</span>
-                    <span class="text-sm font-medium ml-2 px-2 py-1 rounded-full" style="background-color: var(--writer-gray-100); color: var(--writer-gray-600);">AI</span>
+                    <span class="text-2xl font-bold" style="color: var(--writer-text-primary);">Writer</span>
+                    <span class="text-sm font-medium ml-2 px-2 py-1 rounded-full" style="background-color: var(--writer-bg-tertiary); color: var(--writer-text-secondary);">AI</span>
                 </div>
             </div>
-            <h1 class="text-4xl font-bold mb-4" style="color: var(--writer-gray-900);">Writer AI Content Studio</h1>
-            <p class="text-lg" style="color: var(--writer-gray-600);">Transform your products with AI-powered content generation using Writer AI and OpenAI DALL-E. Enhance product descriptions with targeted messaging, create engaging social media posts, and generate professional product images - all optimized for your specific audience and language preferences.</p>
+            <h1 class="text-5xl font-bold mb-6" style="color: var(--writer-text-primary); letter-spacing: -0.02em;">Writer AI Content Studio</h1>
+            <p class="text-xl max-w-3xl mx-auto leading-relaxed" style="color: var(--writer-text-secondary);">Transform your products with AI-powered content generation using Writer AI and OpenAI DALL-E. Enhance product descriptions with targeted messaging, create engaging social media posts, and generate professional product images - all optimized for your specific audience and language preferences.</p>
         </div>
 
         <!-- Tab Navigation -->
         <div class="flex justify-center mb-8">
-            <div class="bg-white rounded-xl p-1 shadow-sm" style="border: 1px solid var(--writer-gray-200);">
+            <div class="rounded-xl p-1 shadow-lg" style="background-color: var(--writer-bg-secondary); border: 1px solid var(--writer-border);">
                 <button 
                     onclick="handleTabClick('products')" 
                     id="products-tab" 
