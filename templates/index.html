@@ -151,7 +151,7 @@
             border-width: 2px;
             box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.3), 0 4px 12px rgba(0, 102, 255, 0.2);
             transform: translateY(-3px);
-            background: linear-gradient(135deg, #f8faff 0%, #e6f2ff 100%);
+            background: linear-gradient(135deg, var(--writer-bg-tertiary) 0%, rgba(0, 102, 255, 0.1) 100%);
         }
 
         /* Tab Styles */
@@ -440,14 +440,13 @@
         </script>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {% for product in products %}
-            <div class="product-card bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md" 
-                 style="border: 1px solid var(--writer-gray-200);" 
+            <div class="product-card rounded-xl shadow-sm overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md" 
                  onclick="selectProduct({{ product.id }}, this)"
                  data-product-id="{{ product.id }}"
                  data-product-type="{{ product.product_type }}">
                 <!-- Product Image -->
                 {% if product.images %}
-                <div class="h-32" style="background-color: var(--writer-gray-100);">
+                <div class="h-32" style="background-color: var(--writer-bg-tertiary);">
                     <img src="{{ product.images[0] }}" 
                          alt="{{ product.title }}" 
                          class="w-full h-full object-cover">
@@ -456,9 +455,9 @@
 
                 <!-- Product Content -->
                 <div class="p-4">
-                    <h3 class="text-sm font-semibold mb-2 line-clamp-2" style="color: var(--writer-gray-800);">{{ product.title }}</h3>
+                    <h3 class="text-sm font-semibold mb-2 line-clamp-2" style="color: var(--writer-text-primary);">{{ product.title }}</h3>
                     
-                    <div class="text-xs mb-2" style="color: var(--writer-gray-600);">
+                    <div class="text-xs mb-2" style="color: var(--writer-text-secondary);">
                         <div class="flex items-center mb-1">
                             <span class="font-medium mr-1">Vendor:</span>
                             <span class="truncate">{{ product.vendor }}</span>
@@ -473,14 +472,14 @@
 
                     <!-- Price -->
                     {% if product.variants %}
-                    <div class="text-sm font-bold mb-2" style="color: var(--writer-blue);">
+                    <div class="text-sm font-bold mb-2" style="color: var(--writer-primary);">
                         ${{ product.variants[0].price }}
                     </div>
                     {% endif %}
 
                     <!-- Stock Info -->
                     {% if product.variants %}
-                    <div class="text-xs mb-2" style="color: var(--writer-gray-500);">
+                    <div class="text-xs mb-2" style="color: var(--writer-text-tertiary);">
                         Stock: {{ product.variants[0].inventory_quantity }}
                     </div>
                     {% endif %}
@@ -488,11 +487,11 @@
                     <!-- Product Status -->
                     <div class="flex items-center justify-between">
                         <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full
-                                   {% if product.status == 'active' %}text-green-800{% else %}text-gray-800{% endif %}"
-                              style="{% if product.status == 'active' %}background-color: #dcfce7;{% else %}background-color: var(--writer-gray-100);{% endif %}">
+                                   {% if product.status == 'active' %}text-green-100{% else %}text-gray-300{% endif %}"
+                              style="{% if product.status == 'active' %}background-color: rgba(16, 185, 129, 0.2);{% else %}background-color: var(--writer-bg-tertiary);{% endif %}">
                             {{ product.status|title }}
                         </span>
-                        <div class="text-xs" style="color: var(--writer-gray-500);">
+                        <div class="text-xs" style="color: var(--writer-text-tertiary);">
                             Writer AI
                         </div>
                     </div>
@@ -712,18 +711,18 @@
                 <div class="max-w-7xl mx-auto flex gap-8">
                     <!-- Sidebar -->
                     <div class="w-80 flex-shrink-0">
-                        <div class="bg-white rounded-xl p-6 shadow-sm sticky top-4" style="border: 1px solid var(--writer-gray-200);">
-                            <h3 class="text-lg font-semibold mb-4" style="color: var(--writer-gray-800);">
+                        <div class="rounded-xl p-6 shadow-sm sticky top-4" style="background-color: var(--writer-bg-secondary); border: 1px solid var(--writer-border);">
+                            <h3 class="text-lg font-semibold mb-4" style="color: var(--writer-text-primary);">
                                 📸 Social Derivative Content with Writer AI
                             </h3>
-                            <div class="space-y-4 text-sm" style="color: var(--writer-gray-600);">
+                            <div class="space-y-4 text-sm" style="color: var(--writer-text-secondary);">
                                 <div>
                                     <p class="text-xs mb-3 leading-relaxed">
                                         Transform your product catalog into viral-ready social media content that drives engagement, builds brand awareness, and converts followers into customers.
                                     </p>
                                 </div>
                                 <div>
-                                    <h4 class="font-medium mb-2" style="color: var(--writer-gray-700);">Writer AI's Social Content Engine:</h4>
+                                    <h4 class="font-medium mb-2" style="color: var(--writer-text-primary);">Writer AI's Social Content Engine:</h4>
                                     <ul class="space-y-2 text-xs">
                                         <li class="flex items-start">
                                             <span class="w-2 h-2 bg-pink-500 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
@@ -792,11 +791,11 @@
                     <!-- Main Content -->
                     <div class="flex-1 min-w-0">
                     <!-- Writer AI Configuration -->
-                    <div class="bg-white rounded-xl p-6 shadow-sm mb-8" style="border: 1px solid var(--writer-gray-200);">
-                        <h3 class="text-xl font-semibold mb-4" style="color: var(--writer-gray-800);">
+                    <div class="rounded-xl p-6 shadow-sm mb-8" style="background-color: var(--writer-bg-secondary); border: 1px solid var(--writer-border);">
+                        <h3 class="text-xl font-semibold mb-4" style="color: var(--writer-text-primary);">
                             📸 Instagram Post Creator
                         </h3>
-                        <p class="text-sm mb-6" style="color: var(--writer-gray-600);">
+                        <p class="text-sm mb-6" style="color: var(--writer-text-secondary);">
                             Generate compelling Instagram posts for your selected products to boost social media engagement and drive sales.
                         </p>
                         
