@@ -1559,7 +1559,7 @@
         // Toggle image idea selection (limit 2 per card)
         function toggleImageIdea(element, cardIndex) {
             const isSelected = element.classList.contains('selected');
-            const cardContainer = element.closest('.bg-white');
+            const cardContainer = element.closest('.rounded-xl');
             const selectedIdeas = cardContainer.querySelectorAll('.image-idea.selected');
             
             if (isSelected) {
@@ -1862,8 +1862,9 @@
             
             enhancements.forEach((enhancement, index) => {
                 const enhancementCard = document.createElement('div');
-                enhancementCard.className = 'bg-white rounded-xl p-6 shadow-sm';
-                enhancementCard.style.border = '1px solid var(--writer-gray-200)';
+                enhancementCard.className = 'rounded-xl p-6 shadow-sm';
+                enhancementCard.style.backgroundColor = 'var(--writer-bg-secondary)';
+                enhancementCard.style.border = '1px solid var(--writer-border)';
                 enhancementCard.setAttribute('data-product-id', enhancement.original_product.id || 'unknown');
                 
                 let cardHTML = `
@@ -1940,7 +1941,7 @@
 
         // Copy individual enhancement content
         function copyEnhancementContent(enhancementIndex) {
-            const enhancementCards = document.querySelectorAll('#targetingResponsesContainer .bg-white');
+            const enhancementCards = document.querySelectorAll('#targetingResponsesContainer .rounded-xl');
             if (enhancementCards[enhancementIndex]) {
                 const descriptionDiv = enhancementCards[enhancementIndex].querySelector('.enhanced-description');
                 if (descriptionDiv) {
@@ -1959,7 +1960,7 @@
 
         // Create social derivative posts from enhanced product
         function createSocialDerivative(enhancementIndex) {
-            const enhancementCards = document.querySelectorAll('#targetingResponsesContainer .bg-white');
+            const enhancementCards = document.querySelectorAll('#targetingResponsesContainer .rounded-xl');
             if (enhancementCards[enhancementIndex]) {
                 const productTitle = enhancementCards[enhancementIndex].querySelector('h4').textContent.replace('✨ ', '');
                 const productInfo = enhancementCards[enhancementIndex].querySelector('.text-sm').textContent;
@@ -2061,7 +2062,7 @@
 
         // Copy all targets
         function copyAllTargets() {
-            const targetingCards = document.querySelectorAll('#targetingResponsesContainer .bg-white');
+            const targetingCards = document.querySelectorAll('#targetingResponsesContainer .rounded-xl');
             let allTargets = '';
             
             targetingCards.forEach((card, index) => {
@@ -2090,7 +2091,7 @@
 
         // Download targets as text file
         function downloadTargets() {
-            const targetingCards = document.querySelectorAll('#targetingResponsesContainer .bg-white');
+            const targetingCards = document.querySelectorAll('#targetingResponsesContainer .rounded-xl');
             let content = 'Targeted Product Descriptions\n' + '='.repeat(30) + '\n\n';
             
             targetingCards.forEach((card, index) => {
@@ -2131,8 +2132,9 @@
             
             responses.forEach((response, index) => {
                 const productCard = document.createElement('div');
-                productCard.className = 'bg-white rounded-xl p-6 shadow-sm';
-                productCard.style.border = '1px solid var(--writer-gray-200)';
+                productCard.className = 'rounded-xl p-6 shadow-sm';
+                productCard.style.backgroundColor = 'var(--writer-bg-secondary)';
+                productCard.style.border = '1px solid var(--writer-border)';
                 // Note: Product ID now comes from selectedProducts (Products tab selection), not from Writer response
                 
                 let cardHTML = `
@@ -2271,14 +2273,14 @@
             });
             
             // Update all generate images button states after cards are created
-            container.querySelectorAll('.bg-white').forEach((card, index) => {
+            container.querySelectorAll('.rounded-xl').forEach((card, index) => {
                 updateGenerateImagesButtonState(card, index);
             });
         }
 
         // Copy individual product caption
         function copyProductContent(productIndex) {
-            const productCards = document.querySelectorAll('#productResponsesContainer .bg-white');
+            const productCards = document.querySelectorAll('#productResponsesContainer .rounded-xl');
             if (productCards[productIndex]) {
                 const captionDiv = productCards[productIndex].querySelector('.caption-text');
                 if (captionDiv) {
@@ -2318,7 +2320,7 @@
 
         // Copy all content
         function copyAllContent() {
-            const productCards = document.querySelectorAll('#productResponsesContainer .bg-white');
+            const productCards = document.querySelectorAll('#productResponsesContainer .rounded-xl');
             let allContent = '';
             
             productCards.forEach((card, index) => {
@@ -2366,7 +2368,7 @@
 
         // Download content as text file
         function downloadAsText() {
-            const productCards = document.querySelectorAll('#productResponsesContainer .bg-white');
+            const productCards = document.querySelectorAll('#productResponsesContainer .rounded-xl');
             let content = 'Instagram Post Content\n' + '='.repeat(25) + '\n\n';
             
             productCards.forEach((card, index) => {
@@ -2762,7 +2764,7 @@
 
         // Generate images from Instagram post
         function generateImagesFromPost(postIndex) {
-            const productCards = document.querySelectorAll('#productResponsesContainer .bg-white');
+            const productCards = document.querySelectorAll('#productResponsesContainer .rounded-xl');
             if (productCards[postIndex]) {
                 const productTitle = productCards[postIndex].querySelector('h4').textContent.replace('📦 ', '');
                 const productInfo = productCards[postIndex].querySelector('.text-sm').textContent;
@@ -2999,8 +3001,9 @@
             
             results.forEach((result, index) => {
                 const imageCard = document.createElement('div');
-                imageCard.className = 'bg-white rounded-xl p-6 shadow-sm';
-                imageCard.style.border = '1px solid var(--writer-gray-200)';
+                imageCard.className = 'rounded-xl p-6 shadow-sm';
+                imageCard.style.backgroundColor = 'var(--writer-bg-secondary)';
+                imageCard.style.border = '1px solid var(--writer-border)';
                 
                 let cardHTML = `
                     <div class="flex items-center justify-between mb-4">
@@ -3059,14 +3062,14 @@
                                 const imageId = `img-${index}-${promptIndex}-${imgIndex}`;
                                 
                                 cardHTML += `
-                                    <div class="bg-white rounded-lg border p-3 relative" id="${imageId}">
+                                    <div class="rounded-lg p-3 relative" id="${imageId}" style="background-color: var(--writer-bg-tertiary); border: 1px solid var(--writer-border);">
                                         <img src="${image.url}" alt="Generated image for ${promptResult.prompt}" 
                                              class="w-full h-64 object-cover rounded-lg mb-2">
-                                        <div class="text-xs text-gray-500 mb-2">
+                                        <div class="text-xs mb-2" style="color: var(--writer-text-tertiary);">
                                             ${image.seed ? `Seed: ${image.seed}` : 'AI Generated'}
                                         </div>
                                         <div class="flex gap-2">
-                                            <button class="instagram-btn flex-1 text-xs px-3 py-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
+                                            <button class="instagram-btn flex-1 text-xs px-3 py-2 rounded transition-colors" style="background-color: var(--writer-primary); color: white;" onmouseover="this.style.backgroundColor='var(--writer-primary-dark)'" onmouseout="this.style.backgroundColor='var(--writer-primary)'"
                                                     data-image-id="${imageId}"
                                                     data-image-url="${image.url}"
                                                     data-prompt="${promptResult.prompt}"
@@ -3074,7 +3077,7 @@
                                                     data-caption="${result.product.caption || ''}">
                                                 📱 Create Instagram Post
                                             </button>
-                                            <button class="download-btn flex-1 text-xs px-3 py-2 bg-purple-50 text-purple-600 rounded hover:bg-purple-100 transition-colors"
+                                            <button class="download-btn flex-1 text-xs px-3 py-2 rounded transition-colors" style="background-color: var(--writer-bg-tertiary); color: var(--writer-text-primary); border: 1px solid var(--writer-border);" onmouseover="this.style.backgroundColor='var(--writer-bg-primary)'" onmouseout="this.style.backgroundColor='var(--writer-bg-tertiary)'"
                                                     data-image-url="${image.url}"
                                                     data-filename="${result.product.title}_idea${promptIndex + 1}_${imgIndex + 1}">
                                                 💾 Download
@@ -3286,8 +3289,8 @@
             document.getElementById('instagramMock').scrollIntoView({ behavior: 'smooth' });
             
             // Add selection styling to selected image
-            document.querySelectorAll('.bg-white.rounded-lg.border.p-3').forEach(img => {
-                img.style.borderColor = 'var(--writer-gray-200)';
+            document.querySelectorAll('#imageResponsesContainer .rounded-lg.p-3.relative').forEach(img => {
+                img.style.borderColor = '1px solid var(--writer-border)';
                 img.style.boxShadow = '';
             });
             
@@ -3300,7 +3303,7 @@
         
         function findInstagramCaptionAndHashtagsForProductIndex(productIndex) {
             // Look for Instagram caption and hashtags in the specific Social Derivative result card by index
-            const productCards = document.querySelectorAll('#productResponsesContainer .bg-white');
+            const productCards = document.querySelectorAll('#productResponsesContainer .rounded-xl');
             
             if (productCards[productIndex]) {
                 const captionElement = productCards[productIndex].querySelector('.caption-text');
@@ -3344,7 +3347,7 @@
         // Legacy function - kept for backward compatibility
         function findInstagramCaptionForProduct(productTitle) {
             // Look for Instagram caption in the Social Derivative results
-            const productCards = document.querySelectorAll('#productResponsesContainer .bg-white');
+            const productCards = document.querySelectorAll('#productResponsesContainer .rounded-xl');
             
             for (let card of productCards) {
                 const cardTitle = card.querySelector('h4');
@@ -3366,8 +3369,8 @@
             document.getElementById('instagramMock').style.display = 'none';
             
             // Remove selection styling from all images
-            document.querySelectorAll('.bg-white.rounded-lg.border.p-3').forEach(img => {
-                img.style.borderColor = 'var(--writer-gray-200)';
+            document.querySelectorAll('#imageResponsesContainer .rounded-lg.p-3.relative').forEach(img => {
+                img.style.borderColor = '1px solid var(--writer-border)';
                 img.style.boxShadow = '';
             });
         }
