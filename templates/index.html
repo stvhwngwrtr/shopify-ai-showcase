@@ -1049,17 +1049,17 @@
                                     </svg>
                                 </div>
                                 
-                                <div class="text-sm font-semibold mb-2" style="color: var(--writer-gray-800);">
+                                <div class="text-sm font-semibold mb-2" style="color: #1a1a1a;">
                                     <span id="instagramLikes">1,234</span> likes
                                 </div>
                                 
                                 <!-- Instagram Caption -->
-                                <div class="text-sm" style="color: var(--writer-gray-800);">
+                                <div class="text-sm" style="color: #1a1a1a;">
                                     <span class="font-semibold" id="instagramCaptionUsername">SuperPossible</span>
                                     <span id="instagramCaption" class="ml-1">Select an image to see the caption preview...</span>
                                 </div>
                                 
-                                <div class="text-xs mt-2" style="color: var(--writer-gray-500);">
+                                <div class="text-xs mt-2" style="color: #737373;">
                                     <span id="instagramTimestamp">2 hours ago</span>
                                 </div>
                             </div>
@@ -1862,10 +1862,10 @@
                 
                 let cardHTML = `
                     <div class="flex items-center justify-between mb-4">
-                        <h4 class="text-lg font-semibold" style="color: var(--writer-gray-800);">
+                        <h4 class="text-lg font-semibold" style="color: var(--writer-text-primary);">
                             ✨ ${enhancement.original_product.title}
                         </h4>
-                        <div class="text-sm" style="color: var(--writer-gray-600);">
+                        <div class="text-sm" style="color: var(--writer-text-secondary);">
                             ${enhancement.original_product.product_type} • ${enhancement.original_product.price}
                         </div>
                     </div>
@@ -1882,8 +1882,8 @@
                     if (enhancement.original_description) {
                         cardHTML += `
                             <div class="mb-4">
-                                <h5 class="text-md font-semibold mb-2" style="color: var(--writer-gray-800);">📄 Original Description</h5>
-                                <div class="p-3 rounded-lg" style="background-color: #fef3c7; border: 1px solid #f59e0b; color: var(--writer-gray-700); font-family: 'Inter', sans-serif; line-height: 1.6; font-size: 0.875rem;">
+                                <h5 class="text-md font-semibold mb-2" style="color: var(--writer-text-primary);">📄 Original Description</h5>
+                                <div class="p-3 rounded-lg" style="background-color: #fef3c7; border: 1px solid #f59e0b; color: #78350f; font-family: 'Inter', sans-serif; line-height: 1.6; font-size: 0.875rem;">
                                     ${enhancement.original_description}
                                 </div>
                             </div>
@@ -1895,7 +1895,7 @@
                         cardHTML += `
                             <div class="mb-4">
                                 <div class="flex items-center justify-between mb-2">
-                                    <h5 class="text-md font-semibold" style="color: var(--writer-gray-800);">✨ Enhanced Description</h5>
+                                    <h5 class="text-md font-semibold" style="color: var(--writer-text-primary);">✨ Enhanced Description</h5>
                                     <button onclick="toggleEditMode('enhanced-description-${index}')" class="text-xs px-2 py-1 rounded text-blue-600 hover:bg-blue-50 transition-colors">
                                         <span class="edit-text">✏️ Edit</span>
                                         <span class="save-text" style="display: none;">💾 Save</span>
@@ -1903,7 +1903,7 @@
                                 </div>
                                 <div class="enhanced-description-container">
                                     <div id="enhanced-description-${index}" class="p-4 rounded-lg enhanced-description editable-content" 
-                                         style="background-color: #dcfce7; border: 1px solid #16a34a; color: var(--writer-gray-700); font-family: 'Inter', sans-serif; line-height: 1.6; min-height: 80px;"
+                                         style="background-color: #dcfce7; border: 1px solid #16a34a; color: #166534; font-family: 'Inter', sans-serif; line-height: 1.6; min-height: 80px;"
                                          contenteditable="false"
                                          data-original-content="${enhancement.enhanced_description.replace(/"/g, '&quot;')}"
                                          onblur="saveContent('enhanced-description-${index}')"
@@ -2132,10 +2132,10 @@
                 
                 let cardHTML = `
                     <div class="flex items-center justify-between mb-4">
-                        <h4 class="text-lg font-semibold" style="color: var(--writer-gray-800);">
+                        <h4 class="text-lg font-semibold" style="color: var(--writer-text-primary);">
                             📦 ${response.product.title}
                         </h4>
-                        <div class="text-sm" style="color: var(--writer-gray-600);">
+                        <div class="text-sm" style="color: var(--writer-text-secondary);">
                             ${response.product.product_type} • ${response.product.price}
                         </div>
                     </div>
@@ -2152,8 +2152,8 @@
                     if (response.summary && response.summary.length > 0) {
                         cardHTML += `
                             <div class="mb-4">
-                                <h5 class="text-md font-semibold mb-2" style="color: var(--writer-gray-800);">📋 Summary</h5>
-                                <ul class="list-disc pl-6 space-y-1" style="color: var(--writer-gray-700);">
+                                <h5 class="text-md font-semibold mb-2" style="color: var(--writer-text-primary);">📋 Summary</h5>
+                                <ul class="list-disc pl-6 space-y-1" style="color: var(--writer-text-secondary);">
                         `;
                         response.summary.forEach(item => {
                             cardHTML += `<li>${item}</li>`;
@@ -2166,7 +2166,7 @@
                         cardHTML += `
                             <div class="mb-4">
                                 <div class="flex items-center justify-between mb-2">
-                                    <h5 class="text-md font-semibold" style="color: var(--writer-gray-800);">💬 Instagram Caption</h5>
+                                    <h5 class="text-md font-semibold" style="color: var(--writer-text-primary);">💬 Instagram Caption</h5>
                                     <button onclick="toggleEditMode('caption-${index}')" class="text-xs px-2 py-1 rounded text-blue-600 hover:bg-blue-50 transition-colors">
                                         <span class="edit-text">✏️ Edit</span>
                                         <span class="save-text" style="display: none;">💾 Save</span>
@@ -2174,7 +2174,7 @@
                                 </div>
                                 <div class="caption-container">
                                     <div id="caption-${index}" class="p-3 rounded-lg caption-text editable-content" 
-                                         style="background-color: var(--writer-gray-50); color: var(--writer-gray-700); font-family: 'Inter', sans-serif; line-height: 1.6; min-height: 60px;"
+                                         style="background-color: var(--writer-bg-tertiary); color: var(--writer-text-secondary); font-family: 'Inter', sans-serif; line-height: 1.6; min-height: 60px; border: 1px solid var(--writer-border);"
                                          contenteditable="false"
                                          data-original-content="${response.caption.replace(/"/g, '&quot;')}"
                                          onblur="saveContent('caption-${index}')"
@@ -2190,7 +2190,7 @@
                     if (response.hashtags && response.hashtags.length > 0) {
                         cardHTML += `
                             <div class="mb-4">
-                                <h5 class="text-md font-semibold mb-2" style="color: var(--writer-gray-800);">🏷️ Hashtags</h5>
+                                <h5 class="text-md font-semibold mb-2" style="color: var(--writer-text-primary);">🏷️ Hashtags</h5>
                                 <div class="flex flex-wrap gap-2">
                         `;
                         response.hashtags.forEach(hashtag => {
@@ -2211,23 +2211,23 @@
                     if (response.image_prompts && response.image_prompts.length > 0) {
                         cardHTML += `
                             <div class="mb-4">
-                                <h5 class="text-md font-semibold mb-2" style="color: var(--writer-gray-800);">
+                                <h5 class="text-md font-semibold mb-2" style="color: var(--writer-text-primary);">
                                     🎨 Image Ideas 
-                                    <span class="text-xs font-normal" style="color: var(--writer-gray-500);">(Select up to 2)</span>
+                                    <span class="text-xs font-normal" style="color: var(--writer-text-tertiary);">(Select up to 2)</span>
                                 </h5>
                                 <div class="space-y-2">
                         `;
                         response.image_prompts.forEach((prompt, promptIndex) => {
                             cardHTML += `
                                 <div class="image-idea p-2 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm" 
-                                     style="background-color: var(--writer-gray-50); border: 1px solid var(--writer-gray-200);"
+                                     style="background-color: var(--writer-bg-tertiary); border: 1px solid var(--writer-border);"
                                      onclick="toggleImageIdea(this, ${index})"
                                      data-card-index="${index}"
                                      data-prompt-index="${promptIndex}">
                                     <div class="flex items-start">
                                         <span class="selection-indicator flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold mr-2" 
                                               style="background-color: var(--writer-primary); color: white;">${promptIndex + 1}</span>
-                                        <p class="text-xs" style="color: var(--writer-gray-700);">${prompt}</p>
+                                        <p class="text-xs" style="color: var(--writer-text-secondary);">${prompt}</p>
                                         <div class="ml-auto flex-shrink-0">
                                             <div class="checkmark hidden w-4 h-4 text-green-600">
                                                 <svg fill="currentColor" viewBox="0 0 20 20">
@@ -3000,10 +3000,10 @@
                 
                 let cardHTML = `
                     <div class="flex items-center justify-between mb-4">
-                        <h4 class="text-lg font-semibold" style="color: var(--writer-gray-800);">
+                        <h4 class="text-lg font-semibold" style="color: var(--writer-text-primary);">
                             🎨 ${result.product.title}
                         </h4>
-                        <div class="text-sm" style="color: var(--writer-gray-600);">
+                        <div class="text-sm" style="color: var(--writer-text-secondary);">
                             ${result.product.product_type} • ${result.product.price}
                         </div>
                     </div>
@@ -3013,11 +3013,11 @@
                     result.results.forEach((promptResult, promptIndex) => {
                         cardHTML += `
                             <div class="mb-6">
-                                <h5 class="text-md font-semibold mb-3" style="color: var(--writer-gray-800);">
+                                <h5 class="text-md font-semibold mb-3" style="color: var(--writer-text-primary);">
                                     💡 Image Idea ${promptIndex + 1}
                                 </h5>
-                                <div class="bg-gray-50 rounded-lg p-3 mb-3">
-                                    <p class="text-sm" style="color: var(--writer-gray-700);">${promptResult.prompt}</p>
+                                <div class="rounded-lg p-3 mb-3" style="background-color: var(--writer-bg-tertiary); border: 1px solid var(--writer-border);">
+                                    <p class="text-sm" style="color: var(--writer-text-secondary);">${promptResult.prompt}</p>
                                 </div>
                         `;
                         
