@@ -356,14 +356,14 @@
 
         <!-- Selected Products Summary -->
         <div id="selectedProducts" class="mb-8" style="display: none;">
-            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 shadow-lg" style="border: 2px solid var(--writer-primary);">
+            <div class="rounded-xl p-6 shadow-lg" style="background: linear-gradient(135deg, rgba(0, 102, 255, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%); border: 2px solid var(--writer-primary);">
                 <div class="flex items-center mb-4">
                     <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mr-3">
                         <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold" style="color: var(--writer-gray-800);">
+                    <h3 class="text-xl font-bold" style="color: var(--writer-text-primary);">
                         <span id="selectedCount">0</span>/3 Products Selected
                     </h3>
                 </div>
@@ -375,19 +375,19 @@
 
         <!-- Language and Demographic Configuration -->
         <div id="languageDemographicConfig" class="mb-8" style="display: none;">
-            <div class="bg-white rounded-xl p-6 shadow-sm" style="border: 1px solid var(--writer-gray-200);">
-                <h3 class="text-lg font-semibold mb-4" style="color: var(--writer-gray-800);">
+            <div class="rounded-xl p-6 shadow-sm" style="background-color: var(--writer-bg-secondary); border: 1px solid var(--writer-border);">
+                <h3 class="text-lg font-semibold mb-4" style="color: var(--writer-text-primary);">
                     🎯 Targeting Configuration
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-medium mb-2" style="color: var(--writer-gray-700);">
+                        <label class="block text-sm font-medium mb-2" style="color: var(--writer-text-secondary);">
                             Target Language
                         </label>
                         <select 
                             id="targetLanguage" 
                             class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            style="border-color: var(--writer-gray-300);">
+                            style="background-color: var(--writer-bg-tertiary); color: var(--writer-text-primary); border-color: var(--writer-border);">
                             <option value="english">English</option>
                             <option value="spanish">Spanish</option>
                             <option value="french">French</option>
@@ -402,13 +402,13 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2" style="color: var(--writer-gray-700);">
+                        <label class="block text-sm font-medium mb-2" style="color: var(--writer-text-secondary);">
                             Target Demographic
                         </label>
                         <select 
                             id="targetDemographic" 
                             class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            style="border-color: var(--writer-gray-300);">
+                            style="background-color: var(--writer-bg-tertiary); color: var(--writer-text-primary); border-color: var(--writer-border);">
                             <option value="general">General Audience</option>
                             <option value="gen-z">Gen Z (1997-2012)</option>
                             <option value="millennial">Millennial (1981-1996)</option>
@@ -606,11 +606,11 @@
                     <!-- Main Content -->
                     <div class="flex-1 min-w-0">
                     <!-- Targeting Configuration -->
-                    <div class="bg-white rounded-xl p-6 shadow-sm mb-8" style="border: 1px solid var(--writer-gray-200);">
-                        <h3 class="text-xl font-semibold mb-4" style="color: var(--writer-gray-800);">
+                    <div class="rounded-xl p-6 shadow-sm mb-8" style="background-color: var(--writer-bg-secondary); border: 1px solid var(--writer-border);">
+                        <h3 class="text-xl font-semibold mb-4" style="color: var(--writer-text-primary);">
                             🎯 Product Targeting
                         </h3>
-                        <p class="text-sm mb-6" style="color: var(--writer-gray-600);">
+                        <p class="text-sm mb-6" style="color: var(--writer-text-secondary);">
                             Target your product descriptions using AI to create more compelling and detailed product information that converts better for specific audiences.
                         </p>
                         
