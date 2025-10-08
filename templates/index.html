@@ -284,7 +284,7 @@
                 </div>
             </div>
             <h1 class="text-5xl font-bold mb-6" style="color: var(--writer-text-primary); letter-spacing: -0.02em;">Writer AI Content Studio</h1>
-            <p class="text-xl max-w-3xl mx-auto leading-relaxed" style="color: var(--writer-text-secondary);">Transform your products with AI-powered content generation using Writer AI and OpenAI DALL-E. Enhance product descriptions with targeted messaging, create engaging social media posts, and generate professional product images - all optimized for your specific audience and language preferences.</p>
+            <p class="text-xl max-w-3xl mx-auto leading-relaxed" style="color: var(--writer-text-secondary);">Transform your products with AI-powered content generation using Writer AI. Enhance product descriptions with targeted messaging, create engaging social media posts, and generate professional product images - all optimized for your specific audience and language preferences.</p>
         </div>
 
         <!-- Tab Navigation -->
@@ -2942,7 +2942,7 @@
                 if (generateBtn) {
                     generateBtn.disabled = true;
                     generateBtn.classList.add('opacity-75');
-                    generateText.textContent = 'Generating Images with DALL-E...';
+                    generateText.textContent = 'Generating Images with AI...';
                     document.getElementById('generateIcon').style.display = 'none';
                     document.getElementById('generateSpinner').style.display = 'block';
                 }
@@ -3063,7 +3063,7 @@
                                         <img src="${image.url}" alt="Generated image for ${promptResult.prompt}" 
                                              class="w-full h-64 object-cover rounded-lg mb-2">
                                         <div class="text-xs text-gray-500 mb-2">
-                                            ${image.seed ? `Seed: ${image.seed}` : 'Generated with DALL-E 3'}
+                                            ${image.seed ? `Seed: ${image.seed}` : 'AI Generated'}
                                         </div>
                                         <div class="flex gap-2">
                                             <button class="instagram-btn flex-1 text-xs px-3 py-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
