@@ -3041,9 +3041,6 @@
                                     <div class="rounded-lg p-3 relative" id="${imageId}" style="background-color: var(--writer-bg-tertiary); border: 1px solid var(--writer-border);">
                                         <img src="${image.url}" alt="Generated image for ${promptResult.prompt}" 
                                              class="w-full h-64 object-cover rounded-lg mb-2">
-                                        <div class="text-xs mb-2" style="color: var(--writer-text-tertiary);">
-                                            ${image.seed ? `Seed: ${image.seed}` : 'AI Generated'}
-                                        </div>
                                         <div class="flex gap-2">
                                             <button class="instagram-btn flex-1 text-xs px-3 py-2 rounded transition-colors" style="background-color: var(--writer-primary); color: white;" onmouseover="this.style.backgroundColor='var(--writer-primary-dark)'" onmouseout="this.style.backgroundColor='var(--writer-primary)'"
                                                     data-image-id="${imageId}"
